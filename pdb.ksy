@@ -466,7 +466,15 @@ types:
     seq:
       - id: length
         type: u2
-      - id: data
+      - id: invoke_data_pos
+        if: data_pos >= 0
+        size: 0
+    instances:
+      data_pos:
+        value: _io.pos
+      # lazy instance
+      data:
+        pos: data_pos
         size: length
         type: tpi_type_data(false)
         if: length > 0
