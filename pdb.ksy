@@ -278,6 +278,32 @@ types:
     seq:
       - id: value
         type: s1
+  tpi_field_attributes:
+    seq:
+      - id: access_protection
+        type: b2
+        doc: 'access protection'
+        enum: tpi::cv_access
+      - id: method_properties
+        type: b3
+        doc: 'method properties'
+        enum: tpi::cv_methodprop
+      - id: is_pseudo
+        type: b1
+        doc: 'compiler generated fcn and does not exist'
+      - id: no_inherit
+        type: b1
+        doc: 'true if class cannot be inherited'
+      - id: no_construct
+        type: b1
+        doc: 'true if class cannot be constructed'
+      - id: compiler_generated
+        type: b1
+        doc: 'compiler generated fcn and does exist'
+      - id: is_sealed
+        type: b1
+        doc: 'true if method cannot be overridden'
+      - type: b6
   tpi_numeric_type:
     seq:
       - id: type
@@ -321,7 +347,7 @@ types:
   lf_enumerate:
     seq:
       - id: attributes
-        type: u2
+        type: tpi_field_attributes
       - id: value
         type: tpi_numeric_type
       - id: field_name
@@ -363,16 +389,54 @@ types:
         type: str
         encoding: UTF-8
         terminator: 0
+  lf_pointer_attributes:
+    seq:
+      - id: pointer_type
+        type: b5
+        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
+        enum: tpi::cv_ptrtype
+      - id: pointer_mode
+        type: b3
+        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
+        enum: tpi::cv_ptrmode
+      - id: is_flat_32
+        type: b1
+        doc: 'true if 0:32 pointer'
+      - id: is_volatile
+        type: b1
+        doc: 'TRUE if volatile pointer'
+      - id: is_const
+        type: b1
+        doc: 'TRUE if const pointer'
+      - id: is_unaligned
+        type: b1
+        doc: 'TRUE if unaligned pointer'
+      - id: is_restricted
+        type: b1
+        doc: 'TRUE if restricted pointer (allow agressive opts)'
+      - id: size
+        type: b6
+        doc: 'size of pointer (in bytes)'
+      - id: is_mocom
+        type: b1
+        doc: 'TRUE if it is a MoCOM pointer (^ or %)'
+      - id: is_lref
+        type: b1
+        doc: 'TRUE if it is this pointer of member function with & ref-qualifier'
+      - id: is_rref
+        type: b1
+        doc: 'TRUE if it is this pointer of member function with && ref-qualifier'
+      - type: b10
   lf_pointer:
     seq:
       - id: underlying_type
         type: tpi_type_ref
       - id: attributes
-        type: u4
+        type: lf_pointer_attributes
   lf_member:
     seq:
       - id: attributes
-        type: u2
+        type: tpi_field_attributes
       - id: field_type
         type: tpi_type_ref
       - id: offset
@@ -381,6 +445,31 @@ types:
         type: str
         encoding: UTF-8
         terminator: 0
+  lf_modifier_flags:
+    seq:
+      - id: const
+        type: b1
+      - id: volatile
+        type: b1
+      - id: unaligned
+        type: b1
+      - type: b13
+  lf_modifier:
+    seq:
+      - id: modified_type
+        type: tpi_type_ref
+      - id: flags
+        type: lf_modifier_flags
+  lf_one_method:
+    seq:
+      - id: attributes
+        type: tpi_field_attributes
+      - id: procedure_type
+        type: tpi_type_ref
+      - id: vtable_offset
+        if: attributes.method_properties == tpi::cv_methodprop::intro
+          or attributes.method_properties == tpi::cv_methodprop::pure_intro
+        type: u4
   lf_procedure:
     enums:
       calling_convention:
@@ -437,6 +526,7 @@ types:
             tpi::leaf_type::lf_array: lf_array
             tpi::leaf_type::lf_procedure: lf_procedure
             tpi::leaf_type::lf_member: lf_member
+            tpi::leaf_type::lf_modifier: lf_modifier
       - id: invoke_end_body
         if: end_body_pos >= 0
         size: 0
@@ -488,6 +578,50 @@ types:
         #repeat-expr: 100
   tpi:
     enums:
+      cv_access:
+        1: private
+        2: protected
+        3: public
+      cv_ptrtype:
+        0: near
+        1: far
+        2: huge
+        3: base_seg
+        4: base_val
+        5: base_seg_val
+        6: base_addr
+        7: base_seg_addr
+        8: base_type
+        9: base_self
+        10: near32
+        11: far32
+        12: ptr64
+        13: unused
+      cv_ptrmode:
+        0: pointer
+        1: reference
+        2: pointer_member_data
+        3: pointer_member_function
+        4: rvalue_reference
+        5: reserved
+      cv_pmtype:
+        0: undef
+        1: d_single
+        2: d_multiple
+        3: d_virtual
+        4: d_general
+        5: f_single
+        6: f_multiple
+        7: f_virtual
+        8: f_general
+      cv_methodprop: 
+        0: vanilla
+        1: virtual
+        2: static
+        3: friend
+        4: intro
+        5: pure_virtual
+        6: pure_intro
       leaf_type:
         0x0001: lf_modifier_16t
         0x0002: lf_pointer_16t
@@ -666,6 +800,18 @@ types:
       - id: types
         type: tpi_types
         size-eos: true
+  dbi_header_flags:
+    seq:
+      - id: linked_incrementally
+        type: b1
+        doc: 'true if linked incrmentally (really just if ilink thunks are present)'
+      - id: stripped
+        type: b1
+        doc: 'true if PDB::CopyTo stripped the private data out'
+      - id: ctypes
+        type: b1
+        doc: 'true if this PDB is using CTypes.'
+      - type: b13
   dbi_header_new:
     enums:
       version:
@@ -711,7 +857,7 @@ types:
       - id: ec_substream_size
         type: u4
       - id: flags
-        type: u2
+        type: dbi_header_flags
       - id: machine_type
         type: u2
       - id: reserved
@@ -761,6 +907,18 @@ types:
     instances:
       aligned:
         value: (value + alignment - 1) & ((alignment - 1) ^ -1)
+  module_info_flags:
+    seq:
+      - id: written
+        type: b1
+        doc: 'TRUE if mod has been written since DBI opened'
+      - id: ec_enabled
+        type: b1
+        doc: 'TRUE if mod has EC symbolic information'
+      - type: b6
+      - id: tsm_list_index
+        type: b8
+        doc: 'index into TSM list for this mods server'
   module_info:
     seq:
       - id: invoke_position_start
@@ -771,7 +929,7 @@ types:
       - id: section_contribution
         type: section_contrib
       - id: flags
-        type: u2
+        type: module_info_flags
       - id: stream
         type: pdb_stream_ref
       - id: symbols_size
@@ -853,28 +1011,28 @@ types:
     seq:
       - id: flags
         type: u2
-        doc: descriptor flags bit field.
+        doc: 'descriptor flags bit field.'
       - id: overlay_number
         type: u2
-        doc: the logical overlay number
+        doc: 'the logical overlay number'
       - id: group_index
         type: u2
-        doc: group index into the descriptor array
+        doc: 'group index into the descriptor array'
       - id: segment_index
         type: u2
-        doc: logical segment index - interpreted via flags
+        doc: 'logical segment index - interpreted via flags'
       - id: segment_name_index
         type: u2
-        doc: segment or group name - index into sstSegName
+        doc: 'segment or group name - index into sstSegName'
       - id: class_name_index
         type: u2
-        doc: class name - index into sstSegName
+        doc: 'class name - index into sstSegName'
       - id: offset
         type: u4
-        doc: byte offset of the logical within the physical segment
+        doc: 'byte offset of the logical within the physical segment'
       - id: size
         type: u4
-        doc: byte count of the logical segment or group
+        doc: 'byte count of the logical segment or group'
   file_info_string:
     seq:
       - id: chars_index
