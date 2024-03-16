@@ -469,10 +469,12 @@ types:
       - id: invoke_data_pos
         if: data_pos >= 0
         size: 0
+      # skip data
+      - size: length
     instances:
       data_pos:
         value: _io.pos
-      # lazy instance
+      # data lazy parsing
       data:
         pos: data_pos
         size: length
