@@ -290,7 +290,8 @@ types:
         type: ti_offset
         repeat: until
         # find the first TI block outside the range
-        # the N-1 block is the one we want
+        # the N-1 block is the one that triggered the "false" condition (i.e. outside the range)
+        # the N-2 block is the one we're interested in
         repeat-until: (_index >= _root.pdb_ds.tpi.header.hash.tpi_hash_data.ti_offset_list.num_items)
           or (_.type_index >= index)
       - id: invoke_items_end
@@ -1216,3 +1217,4 @@ enums:
     2: tpi
     3: dbi
     4: ipi
+  
