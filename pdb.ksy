@@ -440,13 +440,12 @@ types:
       - id: invoke_end_body
         if: end_body_pos >= 0
         size: 0
-      - id: remaining
+      # skip any remaining data (when in top-level)
+      - size-eos: true
         if: nested == false
-        #size: padding_size
-        size-eos: true
-      - id: padding
+      # skip trailing padding (when nested)
+      - size: padding_size
         if: nested == true
-        size: padding_size
     instances:
       trailing_byte:
         if: end_body_pos < _io.size
