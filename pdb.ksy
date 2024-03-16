@@ -230,18 +230,25 @@ types:
     seq:
       - id: hash_stream
         type: pdb_stream_ref
+        doc: 'main hash stream'
       - id: aux_hash_stream
         type: pdb_stream_ref
+        doc: 'auxilliary hash data if necessary'
       - id: hash_key_size
         type: u4
+        doc: 'size of hash key'
       - id: num_hash_buckets
         type: u4
+        doc: 'how many buckets we have'
       - id: hash_values_slice
         type: tpi_slice
+        doc: 'offcb of hashvals'
       - id: type_offsets_slice
         type: tpi_slice
+        doc: 'offcb of (TI,OFF) pairs'
       - id: hash_head_list_slice
         type: tpi_slice
+        doc: 'offcb of hash head list, maps (hashval,ti), where ti is the head of the hashval chain.'
     instances:
       tpi_hash_data:
         size: 0
@@ -260,16 +267,22 @@ types:
       - id: version
         type: u4
         enum: version
+        doc: 'version which created this TypeServer'
       - id: header_size
         type: u4
+        doc: 'size of the header, allows easier upgrading and backwards compatibility'
       - id: min_type_index
         type: u4
+        doc: 'lowest TI'
       - id: max_type_index
         type: u4
+        doc: 'highest TI + 1'
       - id: gp_rec_size
         type: u4
+        doc: 'count of bytes used by the gprec which follows.'
       - id: hash
         type: tpi_hash
+        doc: 'hash stream schema'
   tpi_numeric_literal:
     params:
       - id: value
@@ -278,6 +291,62 @@ types:
     seq:
       - id: value
         type: s1
+  tpi_properties:
+    seq:
+      - id: packed
+        type: b1
+        doc: 'true if structure is packed'
+      - id: ctor
+        type: b1
+        doc: 'true if constructors or destructors present'
+      - id: overlapped_operators
+        type: b1
+        doc: 'true if overloaded operators present'
+      - id: is_nested
+        type: b1
+        doc: 'true if this is a nested class'
+      - id: contains_nested
+        type: b1
+        doc: 'true if this class contains nested types'
+      - id: overlapped_assignment
+        type: b1
+        doc: 'true if overloaded assignment (=)'
+      - id: casting_methods
+        type: b1
+        doc: 'true if casting methods'
+      - id: forward_reference
+        type: b1
+        doc: 'true if forward reference (incomplete defn)'
+      - id: scoped_definition
+        type: b1
+        doc: 'scoped definition'
+      - id: has_unique_name
+        type: b1
+        doc: 'true if there is a decorated name following the regular name'
+      - id: sealed
+        type: b1
+        doc: 'true if class cannot be used as a base class'
+      - id: hfa
+        type: b2
+        enum: tpi::cv_hfa
+      - id: intrinsic
+        type: b1
+        doc: 'true if class is an intrinsic type (e.g. __m128d)'
+      - id: mocom
+        type: b2
+        enum: tpi::cv_mocom_udt
+  tpi_func_attributes:
+    seq:
+      - id: cxx_return_udt
+        type: b1
+        doc: 'true if C++ style ReturnUDT'
+      - id: is_constructor
+        type: b1
+        doc: 'true if func is an instance constructor'
+      - id: is_virtual_constructor
+        type: b1
+        doc: 'true if func is an instance constructor of a class with virtual bases'
+      - type: b5
   tpi_field_attributes:
     seq:
       - id: access_protection
@@ -334,61 +403,81 @@ types:
     seq:
       - id: num_elements
         type: u2
+        doc: 'count of number of elements in class'
       - id: type_properties
-        type: u2
+        type: tpi_properties
+        doc: 'property attribute field'
       - id: underlying_type
         type: tpi_type_ref
+        doc: 'underlying type of the enum'
       - id: field_type
         type: tpi_type_ref
+        doc: 'type index of LF_FIELD descriptor list'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc: 'length prefixed name of enum'
   lf_enumerate:
     seq:
       - id: attributes
         type: tpi_field_attributes
+        doc: 'access'
       - id: value
         type: tpi_numeric_type
+        doc: 'variable length value field'
       - id: field_name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc: 'length prefixed name'
   lf_fieldlist:
     seq:
-      - id: fields
+      - id: data
         type: tpi_type_data(true)
         repeat: eos
+        doc: 'field list sub lists'
   lf_array:
     seq:
       - id: element_type
         type: tpi_type_ref
+        doc: 'type index of element type'
       - id: indexing_type
         type: tpi_type_ref
+        doc: 'type index of indexing type'
       - id: size
         type: tpi_numeric_type
+        doc: 'variable length data specifying size in bytes'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc: 'array name'
   lf_class:
     seq:
       - id: number_of_elements
         type: u2
+        doc: 'count of number of elements in class'
       - id: field_properties
-        type: u2
+        type: tpi_properties
+        doc: 'property attribute field (prop_t)'
       - id: field_type
         type: tpi_type_ref
+        doc: 'type index of LF_FIELD descriptor list'
       - id: derived_type
         type: tpi_type_ref
+        doc: 'type index of derived from list if not zero'
       - id: vshape_type
         type: tpi_type_ref
+        doc: 'type index of vshape table for this class'
       - id: struct_size
         type: tpi_numeric_type
+        doc: 'data describing length of structure in bytes'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc: 'class name'
   lf_pointer_attributes:
     seq:
       - id: pointer_type
@@ -437,74 +526,105 @@ types:
     seq:
       - id: attributes
         type: tpi_field_attributes
+        doc: 'attribute mask'
       - id: field_type
         type: tpi_type_ref
+        doc: 'index of type record for field'
       - id: offset
         type: tpi_numeric_type
+        doc: 'variable length offset of field'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc: 'length prefixed name of field'
   lf_modifier_flags:
     seq:
       - id: const
         type: b1
+        doc: 'TRUE if constant'
       - id: volatile
         type: b1
+        doc: 'TRUE if volatile'
       - id: unaligned
         type: b1
+        doc: 'TRUE if unaligned'
       - type: b13
   lf_modifier:
     seq:
       - id: modified_type
         type: tpi_type_ref
+        doc: 'modified type'
       - id: flags
         type: lf_modifier_flags
+        doc: 'modifier attribute modifier_t'
+  lf_mfunction:
+    seq:
+      - id: return_type
+        type: tpi_type_ref
+        doc: 'type index of return value'
+      - id: class_type
+        type: tpi_type_ref
+        doc: 'type index of containing class'
+      - id: this_type
+        type: tpi_type_ref
+        doc: 'type index of this pointer (model specific)'
+      - id: calling_convention
+        type: u1
+        enum: tpi::calling_convention
+        doc: 'calling convention (call_t)'
+      - id: attributes
+        type: tpi_func_attributes
+        doc: 'attributes'
+      - id: parameters_count
+        type: u2
+        doc: 'number of parameters'
+      - id: argument_list_type
+        type: tpi_type_ref
+        doc: 'type index of argument list'
+      - id: this_adjuster
+        type: u4
+        doc: 'this adjuster (long because pad required anyway)'
   lf_one_method:
     seq:
       - id: attributes
         type: tpi_field_attributes
+        doc: 'method attribute'
       - id: procedure_type
         type: tpi_type_ref
+        doc: 'index to type record for procedure'
       - id: vtable_offset
         if: attributes.method_properties == tpi::cv_methodprop::intro
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
+        doc: 'offset in vfunctable if intro virtual'
+      - id: name
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        doc: 'length prefixed name of method'
   lf_procedure:
-    enums:
-      calling_convention:
-        0: near_c
-        1: far_c
-        2: near_pascal
-        3: far_pascal
-        4: near_fast
-        5: far_fast
-        # 6: unused
-        7: near_std
-        8: far_std
-        9: near_sys
-        0xa: far_sys
-        0xb: thiscall
-        0xc: mipscall
-        0xd: generic
-        0xe: alphacall
-        0xf: ppccall
-        0x10: shcall
-        0x11: armcall
-        0x12: am33call
-        0x13: tricall
-        0x14: sh5call
-        0x15: mr32call
-        0x16: clrcall
-        0x17: inline
-        0x18: near_vector
-        # 0x19: reserved
     seq:
       - id: return_value_type
         type: tpi_type_ref
+        doc: 'type index of return value'
       - id: calling_convention
         type: u1
-        enum: calling_convention
+        enum: tpi::calling_convention
+        doc: 'calling convention (CV_call_t)'
+      - id: function_attributes
+        type: tpi_func_attributes
+        doc: 'attributes'
+      - id: parameter_count
+        type: u2
+        doc: 'number of parameters'
+      - id: arglist
+        type: tpi_type_ref
+        doc: 'type index of argument list'
+  lf_unknown:
+    seq:
+      - id: data
+        size-eos: true
   tpi_type_data:
     params:
       - id: nested
@@ -527,6 +647,9 @@ types:
             tpi::leaf_type::lf_procedure: lf_procedure
             tpi::leaf_type::lf_member: lf_member
             tpi::leaf_type::lf_modifier: lf_modifier
+            tpi::leaf_type::lf_one_method: lf_one_method
+            tpi::leaf_type::lf_mfunction: lf_mfunction
+            _: lf_unknown
       - id: invoke_end_body
         if: end_body_pos >= 0
         size: 0
@@ -578,6 +701,33 @@ types:
         #repeat-expr: 100
   tpi:
     enums:
+      calling_convention:
+        0: near_c
+        1: far_c
+        2: near_pascal
+        3: far_pascal
+        4: near_fast
+        5: far_fast
+        # 6: unused
+        7: near_std
+        8: far_std
+        9: near_sys
+        0xa: far_sys
+        0xb: thiscall
+        0xc: mipscall
+        0xd: generic
+        0xe: alphacall
+        0xf: ppccall
+        0x10: shcall
+        0x11: armcall
+        0x12: am33call
+        0x13: tricall
+        0x14: sh5call
+        0x15: mr32call
+        0x16: clrcall
+        0x17: inline
+        0x18: near_vector
+        # 0x19: reserved
       cv_access:
         1: private
         2: protected
@@ -622,6 +772,16 @@ types:
         4: intro
         5: pure_virtual
         6: pure_intro
+      cv_hfa:
+        0: none
+        1: float
+        2: double
+        3: other
+      cv_mocom_udt:
+        0: none
+        1: ref
+        2: value
+        3: interface
       leaf_type:
         0x0001: lf_modifier_16t
         0x0002: lf_pointer_16t
@@ -670,7 +830,7 @@ types:
         0x0409: lf_nesttype_16t
         0x040a: lf_vfunctab_16t
         0x040b: lf_friendcls_16t
-        0x040c: lf_onemethod_16t
+        0x040c: lf_one_method_16t
         0x040d: lf_vfuncoff_16t
         0x040e: lf_nesttypeex_16t
         0x040f: lf_membermodify_16t
@@ -714,7 +874,7 @@ types:
         0x1408: lf_nesttype_st
         0x1409: lf_vfunctab
         0x140a: lf_friendcls
-        0x140b: lf_onemethod_st
+        0x140b: lf_one_method_st
         0x140c: lf_vfuncoff
         0x140d: lf_nesttypeex_st
         0x140e: lf_membermodify_st
@@ -735,7 +895,7 @@ types:
         0x150e: lf_stmember
         0x150f: lf_method
         0x1510: lf_nesttype
-        0x1511: lf_onemethod
+        0x1511: lf_one_method
         0x1512: lf_nesttypeex
         0x1513: lf_membermodify
         0x1514: lf_managed
@@ -836,26 +996,34 @@ types:
         type: pdb_stream_ref
       - id: pdb_dll_version
         type: u2
+        doc: 'build version of the pdb dll that built this pdb last.'
       - id: symbol_records_stream
         type: pdb_stream_ref
       - id: rbld_version
         type: u2
+        doc: 'rbld version of the pdb dll that built this pdb last.'
       - id: module_list_size
         type: u4
+        doc: 'size of rgmodi substream'
       - id: section_contribution_size
         type: u4
+        doc: 'size of Section Contribution substream'
       - id: section_map_size
         type: u4
       - id: file_info_size
         type: u4
       - id: type_server_map_size
         type: u4
+        doc: 'size of the Type Server Map substream'
       - id: mfc_type_server_index
         type: u4
+        doc: 'index of MFC type server'
       - id: debug_header_size
         type: u4
+        doc: 'size of optional DbgHdr info appended to the end of the stream'
       - id: ec_substream_size
         type: u4
+        doc: 'number of bytes in EC substream, or 0 if EC no EC enabled Mods'
       - id: flags
         type: dbi_header_flags
       - id: machine_type
@@ -896,8 +1064,10 @@ types:
     seq:
       - id: src_filename_index
         type: u4
+        doc: 'NI for src file name'
       - id: pdb_filename_index
         type: u4
+        doc: 'NI for path to compiler PDB'
   align:
     params:
       - id: value
