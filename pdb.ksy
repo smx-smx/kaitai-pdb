@@ -161,18 +161,37 @@ types:
       - id: section_map_size
         type: u4
   ti_offset:
+    params:
+      - id: index
+        type: u4
     seq:
       - id: type_index
         type: u4
       - id: offset
         type: u4
+    instances:
+      #types:
+      #  io: _root.pdb_ds.tpi.types._io
+      #  pos: offset
+      #  type: tpi_tioff_block_reader(type_index, block_length)
+      has_next_block:
+        value: index + 1 < _parent.num_items
+      next_block:
+        if: has_next_block
+        value: _parent.items[index+1]
+      block_end:
+        value: has_next_block == true
+          ? next_block.type_index
+          : _root.pdb_ds.tpi.header.max_type_index
+      block_length:
+        value: block_end - type_index
   ti_offset_list:
     seq:
       - id: invoke_items_start
         size: 0
         if: items_start >= 0
       - id: items
-        type: ti_offset
+        type: ti_offset(_index)
         repeat: eos
       - id: invoke_items_end
         size: 0
@@ -276,93 +295,15 @@ types:
             tpi::leaf_type::lf_quadword: s8
             tpi::leaf_type::lf_uquadword: u8
             _: tpi_numeric_literal(value.as<u2>)
-  
-  tpi_tioff_finder:
-    params:
-      - id: index
-        type: u4
-    
-    seq:
-      - id: invoke_items_start
-        if: items_start >= 0
-        size: 0
-      - id: discard
-        type: ti_offset
-        repeat: until
-        # find the first TI block outside the range
-        # the N-1 block is the one that triggered the "false" condition (i.e. outside the range)
-        # the N-2 block is the one we're interested in
-        repeat-until: (_index >= _root.pdb_ds.tpi.header.hash.tpi_hash_data.ti_offset_list.num_items)
-          or (_.type_index >= index)
-      - id: invoke_items_end
-        if: items_end >= 0
-        size: 0
-    instances:
-      items_start:
-        value: _io.pos
-      items_end:
-        value: _io.pos
-      read_size:
-        value: items_end - items_start
-      last_block_offset:
-        if: read_size >= sizeof<ti_offset>
-        value: read_size - sizeof<ti_offset>
-      last_block_offset2:
-        if: read_size >= (sizeof<ti_offset> * 2)
-        value: last_block_offset - sizeof<ti_offset>
-      stop_block_offset:
-        value: (read_size >= (sizeof<ti_offset> * 2)) ? last_block_offset2 : last_block_offset
-      item_index:
-        value: stop_block_offset / sizeof<ti_offset>
-      stop_block:
-        value: _root.pdb_ds.tpi.header.hash.tpi_hash_data.ti_offset_list.items[item_index] 
-      eos:
-        value: _io.eof
-          or (item_index >= _root.pdb_ds.tpi.header.hash.tpi_hash_data.ti_offset_list.num_items)
-          #or items_end == _io.size
-      found:
-        value: index >= stop_block.type_index
-      item:
-        if: index >= stop_block.type_index
-        value: stop_block
-  
-  tpi_tioff_block_reader:
-    params:
-      - id: delta
-        type: u4
-    seq:
-      - id: discard
-        type: tpi_type_ds
-        repeat: expr
-        repeat-expr: delta - 1
-      - id: type
-        type: tpi_type_ds
   tpi_type_ref:
     seq:
       - id: index
         type: u4
     instances:
+      array_index:
+        value: index - _root.pdb_ds.tpi.header.min_type_index
       type:
-        if: not is_builtin and tioff_finder.found
-        value: tioff_block_reader.type
-      is_builtin:
-        value: index <= 0x7FF
-      tioff_finder:
-        if: not is_builtin
-        io: _root.pdb_ds.tpi.header.hash.tpi_hash_data._io
-        pos: _root.pdb_ds.tpi.header.hash.type_offsets_slice.offset
-        type: tpi_tioff_finder(index)
-      tioff_block:
-        if: not is_builtin
-        value: tioff_finder.item
-      tioff_block_delta:
-         if: not is_builtin and tioff_finder.found
-         value: index - tioff_block.type_index
-      tioff_block_reader:
-         if: not is_builtin and tioff_finder.found
-         io: _root.pdb_ds.tpi.types._io
-         pos: tioff_block.offset
-         type: tpi_tioff_block_reader(tioff_block_delta)
+        value: _root.pdb_ds.tpi.types.types[array_index]
   lf_enum:
     seq:
       - id: num_elements
@@ -390,7 +331,7 @@ types:
   lf_fieldlist:
     seq:
       - id: fields
-        type: tpi_type_data
+        type: tpi_type_data(true)
         repeat: eos
   lf_array:
     seq:
@@ -428,6 +369,18 @@ types:
         type: tpi_type_ref
       - id: attributes
         type: u4
+  lf_member:
+    seq:
+      - id: attributes
+        type: u2
+      - id: field_type
+        type: tpi_type_ref
+      - id: offset
+        type: tpi_numeric_type
+      - id: name
+        type: str
+        encoding: UTF-8
+        terminator: 0
   lf_procedure:
     enums:
       calling_convention:
@@ -464,6 +417,9 @@ types:
         type: u1
         enum: calling_convention
   tpi_type_data:
+    params:
+      - id: nested
+        type: bool
     seq:
       - id: type
         type: u2
@@ -480,13 +436,17 @@ types:
             tpi::leaf_type::lf_structure: lf_class
             tpi::leaf_type::lf_array: lf_array
             tpi::leaf_type::lf_procedure: lf_procedure
-            
+            tpi::leaf_type::lf_member: lf_member
       - id: invoke_end_body
         if: end_body_pos >= 0
         size: 0
       - id: remaining
+        if: nested == false
         #size: padding_size
         size-eos: true
+      - id: padding
+        if: nested == true
+        size: padding_size
     instances:
       trailing_byte:
         if: end_body_pos < _io.size
@@ -500,17 +460,20 @@ types:
       end_body_pos:
         value: _io.pos
   tpi_type_ds:
+    params:
+      - id: ti
+        type: u4
     seq:
       - id: length
         type: u2
       - id: data
         size: length
-        type: tpi_type_data
+        type: tpi_type_data(false)
         if: length > 0
   tpi_types:
     seq:
       - id: types
-        type: tpi_type_ds
+        type: tpi_type_ds(_root.pdb_ds.tpi.header.min_type_index + _index)
         repeat: eos
         #repeat: expr
         #repeat-expr: 100
