@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 (function(){
-  /** UNUSED: to be removed **/
   class Concat {
     #blocks;
 

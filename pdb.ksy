@@ -22,6 +22,18 @@ types:
     instances:
       num_pages:
         value: (num_bytes + _root.page_size - 1) / _root.page_size
+
+  # only used from the DS Constructor to avoid _root references and break the cycle
+  get_num_pages2:
+    params:
+      - id: num_bytes
+        type: u4
+      - id: page_size
+        type: u4
+    instances:
+      num_pages:
+        value: (num_bytes + page_size - 1) / page_size
+
   pdb_header_ds:
     seq:
       - size: 3
@@ -35,24 +47,17 @@ types:
         type: u4
       - id: page_map
         type: u4
-    instances:
-      zzz_num_stream_table_pages:
-        type: get_num_pages(directory_size)
-      # number of pages required for the stream table
-      num_stream_table_pages:
-        value: zzz_num_stream_table_pages.num_pages
-      stream_table_page_list_size:
-        value:
-          num_stream_table_pages * sizeof<u4>
-      zzz_num_stream_table_pagelist_pages:
-        type: get_num_pages(stream_table_page_list_size)
-      # number of pages required for the list of pages (u4 * num_pages)
-      num_stream_table_pagelist_pages:
-        value: zzz_num_stream_table_pagelist_pages.num_pages
   pdb_page:
     seq:
       - id: data
         size: _root.page_size
+  pdb_page2:
+    params:
+      - id: page_size
+        type: u4
+    seq:
+      - id: data
+        size: page_size 
   # represents a PDB page number
   # offers a helper to fetch the page data
   pdb_page_number:
@@ -79,10 +84,12 @@ types:
     params:
       - id: num_pages
         type: u4
+      - id: page_size
+        type: u4
     seq:
       - id: page
-        type: pdb_page
-        size: _root.page_size
+        type: pdb_page2(page_size)
+        size: page_size
         repeat: expr
         repeat-expr: num_pages
   pdb_stream_ref:
@@ -180,9 +187,7 @@ types:
         if: has_next_block
         value: _parent.items[index+1]
       block_end:
-        value: has_next_block == true
-          ? next_block.type_index
-          : _root.pdb_ds.tpi.header.max_type_index
+        value: 'has_next_block == true ? next_block.type_index : _root.pdb_ds.tpi.header.max_type_index'
       block_length:
         value: block_end - type_index
   ti_offset_list:
@@ -668,7 +673,7 @@ types:
         value: trailing_byte >= tpi::leaf_type::lf_pad1.as<u1>
           and trailing_byte <= tpi::leaf_type::lf_pad15.as<u1>
       padding_size:
-        value: has_padding ? trailing_byte & 0xF : 0
+        value: 'has_padding ? trailing_byte & 0xF : 0'
       end_body_pos:
         value: _io.pos
   tpi_type_ds:
@@ -1164,9 +1169,9 @@ types:
             version_type::new: section_contrib2
     instances:
       item_size:
-        value: version == version_type::new
+        value: 'version == version_type::new
           ? sizeof<section_contrib2> : version == version_type::v60
-          ? sizeof<section_contrib> : sizeof<section_contrib40>
+          ? sizeof<section_contrib> : sizeof<section_contrib40>'
   omf_segment_map:
     seq:
       - id: num_segments
@@ -1269,7 +1274,7 @@ types:
       - id: items
         type: type_server_map
         repeat: eos
-  array:
+  pdb_array:
     params:
       - id: element_size
         type: u4
@@ -1288,7 +1293,7 @@ types:
       #      8: u8
       #  repeat: expr
       #  repeat-expr: num_elements
-  buffer:
+  pdb_buffer:
     seq:
       - id: num_bytes
         type: u4
@@ -1329,9 +1334,9 @@ types:
         type: u4
         enum: version
       - id: buffer
-        type: buffer
+        type: pdb_buffer
       - id: indices
-        type: array(4)
+        type: pdb_array(4)
       - id: num_names
         type: u4
     instances:
@@ -1451,21 +1456,35 @@ types:
       - id: header
         type: pdb_header_ds
       - id: stream_table_root_pagelist_data
-        type: pdb_pagelist(header.num_stream_table_pagelist_pages)
-        size: header.page_size * header.num_stream_table_pagelist_pages
+        type: pdb_pagelist(num_stream_table_pagelist_pages, header.page_size)
+        size: header.page_size * num_stream_table_pagelist_pages
     instances:
+      zzz_num_stream_table_pages:
+        type: get_num_pages2(header.directory_size, header.page_size)
+      # number of pages required for the stream table
+      num_stream_table_pages:
+        value: zzz_num_stream_table_pages.num_pages
+      stream_table_page_list_size:
+        value:
+          num_stream_table_pages * sizeof<u4>
+      zzz_num_stream_table_pagelist_pages:
+        type: get_num_pages2(stream_table_page_list_size, header.page_size)
+      # number of pages required for the list of pages (u4 * num_pages)
+      num_stream_table_pagelist_pages:
+        value: zzz_num_stream_table_pagelist_pages.num_pages
+
       # holds page numbers for the directory page list
       stream_table_root_pages:
         io: stream_table_root_pagelist_data._io
         pos: 0
         type: pdb_page_number
         repeat: expr
-        repeat-expr: header.num_stream_table_pagelist_pages
+        repeat-expr: num_stream_table_pagelist_pages
       # holds page numbers for the stream table
       stream_table_pages:
         size: 0
         process: concat_pages(stream_table_root_pages)
-        type: pdb_page_number_list(header.num_stream_table_pages)
+        type: pdb_page_number_list(num_stream_table_pages)
       stream_table:
         size: 0
         process: concat_pages(stream_table_pages.pages)
@@ -1498,12 +1517,12 @@ instances:
   page_size:
     value: pdb_ds.header.page_size
   pdb_type:
-    value: _root.signature.id == "DS" ? pdb_type::big : 
-      _root.signature.id == "JG" ? pdb_type::small : pdb_type::old
+    value: '_root.signature.id == "DS" ? pdb_type::big : 
+      _root.signature.id == "JG" ? pdb_type::small : pdb_type::old'
   si_persist_size:
-    value: pdb_type == pdb_type::big ? sizeof<si_persist_ds>
+    value: 'pdb_type == pdb_type::big ? sizeof<si_persist_ds>
       : pdb_type == pdb_type::small ? sizeof<si_persist_jg>
-      : 0
+      : 0'
   stream_table:
     value: pdb_ds.stream_table
 enums:
