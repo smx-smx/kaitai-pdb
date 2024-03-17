@@ -63,14 +63,20 @@ types:
   # offers a helper to fetch the page data
   pdb_page_number:
     seq:
-      - id: page_number
-        type: u4
+      - id: page_number_data
+        type:
+          switch-on: _root.page_number_size
+          cases:
+            2: u2
+            4: u4
     instances:
+      page_number:
+        value: page_number_data.as<u4>
       page:
         io: _root._io
         pos: _root.page_size * page_number
         type: pdb_page
-  # represents a contiguous array of PDB page numbers
+    # represents a contiguous array of PDB page numbers
   pdb_page_number_list:
     params:
       - id: num_pages
@@ -116,6 +122,8 @@ types:
         type: u4
     seq:
       - id: stream_size
+        type: u4
+      - id: map_spn_pn
         type: u4
     instances:
       zzz_num_directory_pages:
@@ -181,7 +189,6 @@ types:
         type: pdb_stream_pagelist(_index)
         repeat: expr
         repeat-expr: num_streams
-        doc: 'mpspnpn - SI''s SPN->PN map'
   dbi_header_old:
     seq:
       - id: gs_symbols_stream
@@ -1581,14 +1588,18 @@ types:
     seq:
       - id: header
         type: pdb_header_jg
-      - id: stream_table_root_pagelist_data
-        type: pdb_pagelist(num_stream_table_pages, header.page_size)
+      - id: stream_table_pages
+        type: pdb_page_number_list(num_stream_table_pages)
         size: header.page_size * num_stream_table_pages
     instances:
       zzz_num_stream_table_pages:
         type: get_num_pages2(header.directory_size, header.page_size)
       num_stream_table_pages:
         value: zzz_num_stream_table_pages.num_pages
+      stream_table:
+        size: 0
+        process: concat_pages(stream_table_pages.pages)
+        type: pdb_stream_table
   pdb_ds:
     seq:
       - id: header
@@ -1655,6 +1666,8 @@ seq:
     if: signature.id == "JG"
     type: pdb_jg
 instances:
+  page_number_size:
+    value: 'pdb_type == pdb_type::big ? 4 : 2'
   page_size_ds:
     if: pdb_type == pdb_type::big
     value: pdb_ds.header.page_size
