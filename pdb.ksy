@@ -442,6 +442,25 @@ types:
         type: tpi_type_data(true)
         repeat: eos
         doc: 'field list sub lists'
+  lf_arglist:
+    seq:
+      - id: count
+        type: u4
+        doc: 'number of arguments'
+      - id: arguments
+        type: tpi_type_ref
+        repeat: expr
+        repeat-expr: count
+        doc: 'argument types'
+  lf_bitfield:
+    seq: 
+      - id: type
+        type: tpi_type_ref
+        doc: 'type of bitfield'
+      - id: length
+        type: u1
+      - id: position
+        type: u1
   lf_array:
     seq:
       - id: element_type
@@ -608,6 +627,24 @@ types:
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name of method'
+  ml_method:
+    seq:
+      - id: attributes
+        type: tpi_field_attributes
+        doc: 'method attribute'
+      - size: 2
+      - id: index_type
+        type: tpi_type_ref
+      - id: vtable_offset
+        if: attributes.method_properties == tpi::cv_methodprop::intro
+          or attributes.method_properties == tpi::cv_methodprop::pure_intro
+        type: u4
+        doc: 'offset in vfunctable if intro virtual'
+  lf_methodlist:
+    seq:
+      - id: methods
+        type: ml_method
+        repeat: eos
   lf_procedure:
     seq:
       - id: return_value_type
@@ -626,6 +663,35 @@ types:
       - id: arglist
         type: tpi_type_ref
         doc: 'type index of argument list'
+  lf_vtshape:
+    seq:
+      - id: count
+        type: u2
+        doc: 'number of entries in vfunctable'
+      - id: descriptors
+        type: b4
+        enum: tpi::cv_vts_desc
+        repeat: expr
+        repeat-expr: count
+  lf_union:
+    seq:
+      - id: count
+        type: u2
+        doc: 'count of number of elements in class'
+      - id: property
+        type: tpi_properties
+        doc: 'property attribute field'
+      - id: field
+        type: tpi_type_ref
+        doc: 'type index of LF_FIELD descriptor list'
+      - id: length
+        type: tpi_numeric_type
+        doc: 'variable length data describing length of structure'
+      - id: name
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        doc: 'array name'
   lf_unknown:
     seq:
       - id: data
@@ -654,6 +720,11 @@ types:
             tpi::leaf_type::lf_modifier: lf_modifier
             tpi::leaf_type::lf_one_method: lf_one_method
             tpi::leaf_type::lf_mfunction: lf_mfunction
+            tpi::leaf_type::lf_arglist: lf_arglist
+            tpi::leaf_type::lf_bitfield: lf_bitfield
+            tpi::leaf_type::lf_union: lf_union
+            tpi::leaf_type::lf_vtshape: lf_vtshape
+            tpi::leaf_type::lf_methodlist: lf_methodlist
             _: lf_unknown
       - id: invoke_end_body
         if: end_body_pos >= 0
@@ -786,6 +857,15 @@ types:
         1: ref
         2: value
         3: interface
+      cv_vts_desc:
+        0: near
+        1: far
+        2: thin
+        3: outer
+        4: meta
+        5: near32
+        6: far32
+        7: unused
       leaf_type:
         0x0001: lf_modifier_16t
         0x0002: lf_pointer_16t
