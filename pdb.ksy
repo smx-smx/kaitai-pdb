@@ -403,6 +403,7 @@ types:
       array_index:
         value: index - _root.pdb_ds.tpi.header.min_type_index
       type:
+        if: array_index >= 0
         value: _root.pdb_ds.tpi.types.types[array_index]
   lf_enum:
     seq:
