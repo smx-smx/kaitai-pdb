@@ -2,6 +2,7 @@ meta:
   id: pdb
   file-extension: pdb
   endian: le
+  bit-endian: le
   ks-opaque-types: true
 
 types:
