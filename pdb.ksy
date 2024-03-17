@@ -104,19 +104,22 @@ types:
       - id: stream_number
         type: s2
     instances:
+      # checks if the stream number is not snNil, and it's within bounds
+      is_valid_stream:
+        value: stream_number > -1 and stream_number < _root.num_streams
+      zzz_size:
+        if: is_valid_stream
+        type: get_stream_size(stream_number)
       size:
-        if: stream_number > -1 and stream_number < _root.num_streams
-        value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number].stream_size
-          : 0'
-          #: _root.pdb_jg.stream_table.stream_sizes_jg[stream_number].stream_size'
+        value: 'is_valid_stream ? zzz_size.value : 0'
+      zzz_data:
+        if: is_valid_stream
+        type: get_stream_data(stream_number)
       data:
-        if: stream_number > -1 and stream_number < _root.num_streams
-        value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.streams[stream_number].data
-          : [0]'
-          #: _root.pdb_jg.stream_table.streams[stream_number].data'
+        if: is_valid_stream
+        value: zzz_data.value
   pdb_stream_entry_jg:
+    doc: 'SI_PERSIST'
     params:
       - id: stream_number
         type: u4
@@ -131,6 +134,7 @@ types:
       num_directory_pages:
         value: zzz_num_directory_pages.num_pages
   pdb_stream_entry_ds:
+    doc: 'SI_PERSIST'
     params:
       - id: stream_number
         type: u4
@@ -157,20 +161,47 @@ types:
       - id: pages
         type: pdb_page_number_list(num_directory_pages)
     instances:
-      stream_size:
-        value: '_root.pdb_type == pdb_type::big
-          ? _parent.stream_sizes_ds[stream_number].stream_size
-          : _parent.stream_sizes_jg[stream_number].stream_size'
       data:
         value: zzz_pages.data
       zzz_pages:
         size: 0
         process: concat_pages(pages.pages)
         type: pdb_stream_data(stream_size)
+      zzz_stream_size:
+        type: get_stream_size(stream_number)
+      zzz_num_directory_pages:
+        type: get_stream_num_pages(stream_number)
       num_directory_pages:
+        value: zzz_num_directory_pages.value
+      stream_size:
+        value: zzz_stream_size.value
+  get_stream_num_pages:
+    params:
+      - id: stream_number
+        type: u4
+    instances:
+      value:
         value: '_root.pdb_type == pdb_type::big
-          ? _parent.stream_sizes_ds[stream_number].num_directory_pages
-          : _parent.stream_sizes_jg[stream_number].num_directory_pages'
+          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number].num_directory_pages
+          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number].num_directory_pages'
+  get_stream_data:
+    params:
+      - id: stream_number
+        type: u4
+    instances:
+      value:
+        value: '_root.pdb_type == pdb_type::big
+          ? _root.pdb_ds.stream_table.streams[stream_number].data
+          : _root.pdb_jg.stream_table.streams[stream_number].data'
+  get_stream_size:
+    params:
+      - id: stream_number
+        type: u4
+    instances:
+      value:
+        value: '_root.pdb_type == pdb_type::big
+          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number].stream_size
+          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number].stream_size'
   pdb_stream_table:
     seq:
       - id: num_streams
@@ -1646,16 +1677,6 @@ types:
         size: 0
         type: dbi
         process: cat(stream_table.streams[default_stream::dbi.to_i].data)
-  si_persist_ds:
-    seq:
-      - id: num_bytes
-        type: u4
-  si_persist_jg:
-    seq:
-      - id: num_bytes
-        type: u4
-      - id: map_pagenum
-        type: u4
 seq:
   - id: signature
     type: pdb_signature
@@ -1681,14 +1702,10 @@ instances:
   pdb_type:
     value: '_root.signature.id == "DS" ? pdb_type::big : 
       _root.signature.id == "JG" ? pdb_type::small : pdb_type::old'
-  si_persist_size:
-    value: 'pdb_type == pdb_type::big ? sizeof<si_persist_ds>
-      : pdb_type == pdb_type::small ? sizeof<si_persist_jg>
-      : 0'
   num_streams:
     value: 'pdb_type == pdb_type::big
       ? pdb_ds.stream_table.num_streams
-      : 0'
+      : pdb_jg.stream_table.num_streams'
 enums:
   # pseudo-enum to keep track of the PDB type
   pdb_type:
