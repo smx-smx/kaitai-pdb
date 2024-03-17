@@ -289,7 +289,7 @@ types:
       - id: hash
         type: tpi_hash
         doc: 'hash stream schema'
-  tpi_numeric_literal:
+  cv_numeric_literal:
     params:
       - id: value
         type: u2
@@ -297,7 +297,7 @@ types:
     seq:
       - id: value
         type: s1
-  tpi_properties:
+  cv_properties:
     seq:
       - id: packed
         type: b1
@@ -341,7 +341,7 @@ types:
       - id: mocom
         type: b2
         enum: tpi::cv_mocom_udt
-  tpi_func_attributes:
+  cv_func_attributes:
     seq:
       - id: cxx_return_udt
         type: b1
@@ -353,7 +353,7 @@ types:
         type: b1
         doc: 'true if func is an instance constructor of a class with virtual bases'
       - type: b5
-  tpi_field_attributes:
+  cv_field_attributes:
     seq:
       - id: access_protection
         type: b2
@@ -379,7 +379,7 @@ types:
         type: b1
         doc: 'true if method cannot be overridden'
       - type: b6
-  tpi_numeric_type:
+  cv_numeric_type:
     seq:
       - id: type
         type: u2
@@ -395,7 +395,7 @@ types:
             tpi::leaf_type::lf_ulong: u4
             tpi::leaf_type::lf_quadword: s8
             tpi::leaf_type::lf_uquadword: u8
-            _: tpi_numeric_literal(type.as<u2>)
+            _: cv_numeric_literal(type.as<u2>)
   tpi_type_ref:
     seq:
       - id: index
@@ -412,7 +412,7 @@ types:
         type: u2
         doc: 'count of number of elements in class'
       - id: type_properties
-        type: tpi_properties
+        type: cv_properties
         doc: 'property attribute field'
       - id: underlying_type
         type: tpi_type_ref
@@ -428,10 +428,10 @@ types:
   lf_enumerate:
     seq:
       - id: attributes
-        type: tpi_field_attributes
+        type: cv_field_attributes
         doc: 'access'
       - id: value
-        type: tpi_numeric_type
+        type: cv_numeric_type
         doc: 'variable length value field'
       - id: field_name
         type: str
@@ -472,7 +472,7 @@ types:
         type: tpi_type_ref
         doc: 'type index of indexing type'
       - id: size
-        type: tpi_numeric_type
+        type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
       - id: name
         type: str
@@ -485,7 +485,7 @@ types:
         type: u2
         doc: 'count of number of elements in class'
       - id: field_properties
-        type: tpi_properties
+        type: cv_properties
         doc: 'property attribute field (prop_t)'
       - id: field_type
         type: tpi_type_ref
@@ -497,7 +497,7 @@ types:
         type: tpi_type_ref
         doc: 'type index of vshape table for this class'
       - id: struct_size
-        type: tpi_numeric_type
+        type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
       - id: name
         type: str
@@ -551,13 +551,13 @@ types:
   lf_member:
     seq:
       - id: attributes
-        type: tpi_field_attributes
+        type: cv_field_attributes
         doc: 'attribute mask'
       - id: field_type
         type: tpi_type_ref
         doc: 'index of type record for field'
       - id: offset
-        type: tpi_numeric_type
+        type: cv_numeric_type
         doc: 'variable length offset of field'
       - id: name
         type: str
@@ -600,7 +600,7 @@ types:
         enum: tpi::calling_convention
         doc: 'calling convention (call_t)'
       - id: attributes
-        type: tpi_func_attributes
+        type: cv_func_attributes
         doc: 'attributes'
       - id: parameters_count
         type: u2
@@ -614,7 +614,7 @@ types:
   lf_one_method:
     seq:
       - id: attributes
-        type: tpi_field_attributes
+        type: cv_field_attributes
         doc: 'method attribute'
       - id: procedure_type
         type: tpi_type_ref
@@ -632,7 +632,7 @@ types:
   ml_method:
     seq:
       - id: attributes
-        type: tpi_field_attributes
+        type: cv_field_attributes
         doc: 'method attribute'
       - size: 2
       - id: index_type
@@ -657,7 +657,7 @@ types:
         enum: tpi::calling_convention
         doc: 'calling convention (CV_call_t)'
       - id: function_attributes
-        type: tpi_func_attributes
+        type: cv_func_attributes
         doc: 'attributes'
       - id: parameter_count
         type: u2
@@ -681,13 +681,13 @@ types:
         type: u2
         doc: 'count of number of elements in class'
       - id: property
-        type: tpi_properties
+        type: cv_properties
         doc: 'property attribute field'
       - id: field
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
       - id: length
-        type: tpi_numeric_type
+        type: cv_numeric_type
         doc: 'variable length data describing length of structure'
       - id: name
         type: str
