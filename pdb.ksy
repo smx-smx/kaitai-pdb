@@ -670,8 +670,8 @@ types:
         pos: end_body_pos
         type: u1
       has_padding:
-        value: trailing_byte >= tpi::leaf_type::lf_pad1.as<u1>
-          and trailing_byte <= tpi::leaf_type::lf_pad15.as<u1>
+        value: trailing_byte >= tpi::leaf_type::lf_pad1.to_i
+          and trailing_byte <= tpi::leaf_type::lf_pad15.to_i
       padding_size:
         value: 'has_padding ? trailing_byte & 0xF : 0'
       end_body_pos:
@@ -1492,11 +1492,11 @@ types:
       tpi:
         size: 0
         type: tpi
-        process: cat(stream_table.streams[default_stream::tpi.as<u4>].data)
+        process: cat(stream_table.streams[default_stream::tpi.to_i].data)
       dbi:
         size: 0
         type: dbi
-        process: cat(stream_table.streams[default_stream::dbi.as<u4>].data)
+        process: cat(stream_table.streams[default_stream::dbi.to_i].data)
   si_persist_ds:
     seq:
       - id: num_bytes
