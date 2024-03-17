@@ -254,7 +254,7 @@ types:
         if: has_next_block
         value: _parent.items[index+1]
       block_end:
-        value: 'has_next_block == true ? next_block.type_index : _root.pdb_ds.tpi.header.max_type_index'
+        value: 'has_next_block == true ? next_block.type_index : _root.tpi.header.max_type_index'
       block_length:
         value: block_end - type_index
   ti_offset_list:
@@ -468,10 +468,10 @@ types:
         type: u4
     instances:
       array_index:
-        value: index - _root.pdb_ds.tpi.header.min_type_index
+        value: index - _root.tpi.header.min_type_index
       type:
         if: array_index >= 0
-        value: _root.pdb_ds.tpi.types.types[array_index]
+        value: _root.tpi.types.types[array_index]
   lf_enum:
     seq:
       - id: num_elements
@@ -840,7 +840,7 @@ types:
     instances:
       types:
         pos: 0
-        type: tpi_type_ds(_root.pdb_ds.tpi.header.min_type_index + _index)
+        type: tpi_type_ds(_root.tpi.header.min_type_index + _index)
         repeat: eos
   tpi:
     enums:
@@ -1669,14 +1669,6 @@ types:
         size: 0
         process: concat_pages(stream_table_pages.pages)
         type: pdb_stream_table
-      tpi:
-        size: 0
-        type: tpi
-        process: cat(stream_table.streams[default_stream::tpi.to_i].data)
-      dbi:
-        size: 0
-        type: dbi
-        process: cat(stream_table.streams[default_stream::dbi.to_i].data)
 seq:
   - id: signature
     type: pdb_signature
@@ -1706,6 +1698,18 @@ instances:
     value: 'pdb_type == pdb_type::big
       ? pdb_ds.stream_table.num_streams
       : pdb_jg.stream_table.num_streams'
+  zzz_tpi_data:
+    type: get_stream_data(default_stream::tpi.to_i)
+  zzz_dbi_data:
+    type: get_stream_data(default_stream::dbi.to_i)
+  tpi:
+    size: 0
+    type: tpi
+    process: cat(zzz_tpi_data.value)
+  dbi:
+    size: 0
+    type: dbi
+    process: cat(zzz_dbi_data.value)
 enums:
   # pseudo-enum to keep track of the PDB type
   pdb_type:
