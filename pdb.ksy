@@ -394,7 +394,7 @@ types:
             tpi::leaf_type::lf_ulong: u4
             tpi::leaf_type::lf_quadword: s8
             tpi::leaf_type::lf_uquadword: u8
-            _: tpi_numeric_literal(value.as<u2>)
+            _: tpi_numeric_literal(type.as<u2>)
   tpi_type_ref:
     seq:
       - id: index
@@ -698,12 +698,11 @@ types:
         type: tpi_type_data(false)
         if: length > 0
   tpi_types:
-    seq:
-      - id: types
+    instances:
+      types:
+        pos: 0
         type: tpi_type_ds(_root.pdb_ds.tpi.header.min_type_index + _index)
         repeat: eos
-        #repeat: expr
-        #repeat-expr: 100
   tpi:
     enums:
       calling_convention:
@@ -962,9 +961,13 @@ types:
     seq:
       - id: header
         type: tpi_header
-      - id: types
-        type: tpi_types
+      - id: types_data
         size-eos: true
+    instances:
+      types:
+        size: 0
+        type: tpi_types
+        process: cat(types_data)
   dbi_header_flags:
     seq:
       - id: linked_incrementally
