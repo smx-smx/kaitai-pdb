@@ -230,6 +230,37 @@ types:
         type: pdb_stream_pagelist(_index)
         repeat: expr
         repeat-expr: num_streams
+  psgi_header:
+    seq:
+      - id: sym_hash_size
+        type: u4
+        doc: 'cbSymHash'
+      - id: address_map_size
+        type: u4
+        doc: 'cbAddrMap'
+      - id: num_thunks
+        type: u4
+        doc: 'nThunks'
+      - id: thunk_size
+        type: u4
+        doc: 'cbSizeOfThunk'
+      - id: thunk_table_section_index
+        type: u4
+        doc: 'isectThunkTable'
+      - id: thunk_table_offset
+        type: u4
+        doc: 'offThunkTable'
+      - id: num_sections
+        type: u4
+        doc: 'nSects'
+  public_symbols_stream:
+    seq:
+      - id: header
+        type: psgi_header
+      - id: symbols_hash_map
+        size: header.sym_hash_size
+      - id: address_map
+        size: header.address_map_size
   dbi_header_old:
     seq:
       - id: gs_symbols_stream
@@ -244,6 +275,12 @@ types:
         type: u4
       - id: section_map_size
         type: u4
+    instances:
+      ps_symbols_data:
+        size: 0
+        if: ps_symbols_stream.stream_number > -1
+        process: cat(ps_symbols_stream.data)
+        type: public_symbols_stream
   ti_offset:
     params:
       - id: index
@@ -1403,6 +1440,12 @@ types:
         type: u2
       - id: reserved
         type: u4
+    instances:
+      ps_symbols_data:
+        size: 0
+        if: ps_symbols_stream.stream_number > -1
+        process: cat(ps_symbols_stream.data)
+        type: public_symbols_stream
   section_contrib40:
     seq:
       - id: section_index
