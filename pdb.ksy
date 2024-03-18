@@ -1530,6 +1530,8 @@ types:
         # 0xeffe0000 + 20140516
         0xF13151E4: new
     seq:
+      - size: 4
+        if: 'version == version_type::v60 or version == version_type::new'
       - id: items
         repeat: eos
         type:
