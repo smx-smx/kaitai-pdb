@@ -12,10 +12,20 @@ types:
         type: str
         terminator: 0x1A
         encoding: UTF-8
+      - id: invoke_id_pos
+        size: 0
+        if: id_pos >= 0
       - id: id
         type: str
         size: 2
         encoding: UTF-8
+    instances:
+      version_major_pos:
+        value: id_pos - 7
+      version_major:
+        value: magic.substring(version_major_pos, version_major_pos + 1)
+      id_pos:
+        value: _io.pos
   get_num_pages:
     params:
       - id: num_bytes
@@ -462,16 +472,26 @@ types:
             tpi::leaf_type::lf_quadword: s8
             tpi::leaf_type::lf_uquadword: u8
             _: cv_numeric_literal(type.as<u2>)
+  tpi_type_ref16:
+    seq:
+      - id: index
+        type: u2
+    instances:
+      array_index:
+        value: index - _root.min_type_index
+      type:
+        if: array_index >= 0
+        value: _root.types[array_index]
   tpi_type_ref:
     seq:
       - id: index
         type: u4
     instances:
       array_index:
-        value: index - _root.tpi.header.min_type_index
+        value: index - _root.min_type_index
       type:
         if: array_index >= 0
-        value: _root.tpi.types.types[array_index]
+        value: _root.types[array_index]
   lf_enum:
     params:
       - id: string_prefixed
@@ -505,6 +525,12 @@ types:
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name'
+  lf_fieldlist_16t:
+    seq:
+      - id: data
+        type: tpi_type_data(true)
+        repeat: eos
+        doc: 'field list sub lists'
   lf_fieldlist:
     seq:
       - id: data
@@ -521,6 +547,16 @@ types:
         repeat: expr
         repeat-expr: count
         doc: 'argument types'
+  lf_arglist_16t:
+    seq:
+      - id: count
+        type: u2
+        doc: 'number of arguments'
+      - id: arguments
+        type: tpi_type_ref16
+        repeat: expr
+        repeat-expr: count
+        doc: 'argument types'
   lf_bitfield:
     seq: 
       - id: type
@@ -530,6 +566,20 @@ types:
         type: u1
       - id: position
         type: u1
+  lf_array_16t:
+    seq:
+      - id: element_type
+        type: tpi_type_ref16
+        doc: 'type index of element type'
+      - id: indexing_type
+        type: tpi_type_ref16
+        doc: 'type index of indexing type'
+      - id: size
+        type: cv_numeric_type
+        doc: 'variable length data specifying size in bytes'
+      - id: name
+        type: tpi_string(true)
+        doc: 'array name'
   lf_array:
     params:
       - id: string_prefixed
@@ -568,6 +618,29 @@ types:
     instances:
       name:
         value: 'is_prefixed ? name_prefixed : name_cstring'
+  lf_class_16t:
+    seq:
+      - id: number_of_elements
+        type: u2
+        doc: 'count of number of elements in class'
+      - id: field_type
+        type: tpi_type_ref16
+        doc: 'type index of LF_FIELD descriptor list'
+      - id: properties
+        type: cv_properties
+        doc: 'property attribute field (prop_t)'
+      - id: derived_type
+        type: tpi_type_ref16
+        doc: 'type index of derived from list if not zero'
+      - id: vshape_type
+        type: tpi_type_ref16
+        doc: 'type index of vshape table for this class' 
+      - id: struct_size
+        type: cv_numeric_type
+        doc: 'data describing length of structure in bytes'
+      - id: name
+        type: tpi_string(true)
+        doc: 'class name'
   lf_class:
     params:
       - id: string_prefixed
@@ -576,7 +649,7 @@ types:
       - id: number_of_elements
         type: u2
         doc: 'count of number of elements in class'
-      - id: field_properties
+      - id: properties
         type: cv_properties
         doc: 'property attribute field (prop_t)'
       - id: field_type
@@ -594,6 +667,29 @@ types:
       - id: name
         type: tpi_string(string_prefixed)
         doc: 'class name'
+  lf_pointer_attributes_16t:
+    seq:
+      - id: pointer_type
+        type: b5
+        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
+        enum: tpi::cv_ptrtype
+      - id: pointer_mode
+        type: b3
+        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
+        enum: tpi::cv_ptrmode
+      - id: is_flat_32
+        type: b1
+        doc: 'true if 0:32 pointer'
+      - id: is_volatile
+        type: b1
+        doc: 'TRUE if volatile pointer'
+      - id: is_const
+        type: b1
+        doc: 'TRUE if const pointer'
+      - id: is_unaligned
+        type: b1
+        doc: 'TRUE if unaligned pointer'
+      - type: b4
   lf_pointer_attributes:
     seq:
       - id: pointer_type
@@ -638,6 +734,12 @@ types:
         type: tpi_type_ref
       - id: attributes
         type: lf_pointer_attributes
+  lf_pointer_16t:
+    seq:
+      - id: attributes
+        type: lf_pointer_attributes_16t
+      - id: underlying_type
+        type: tpi_type_ref16
   lf_member:
     seq:
       - id: attributes
@@ -666,6 +768,14 @@ types:
         type: b1
         doc: 'TRUE if unaligned'
       - type: b13
+  lf_modifier_16t:
+    seq:
+      - id: flags
+        type: lf_modifier_flags
+        doc: 'modifier attribute modifier_t'
+      - id: modified_type
+        type: tpi_type_ref16
+        doc: 'modified type'
   lf_modifier:
     seq:
       - id: modified_type
@@ -674,6 +784,33 @@ types:
       - id: flags
         type: lf_modifier_flags
         doc: 'modifier attribute modifier_t'
+  lf_mfunction_16t:
+    seq:
+      - id: return_type
+        type: tpi_type_ref16
+        doc: 'type index of return value'
+      - id: class_type
+        type: tpi_type_ref16
+        doc: 'type index of containing class'
+      - id: this_type
+        type: tpi_type_ref16
+        doc: 'type index of this pointer (model specific)'
+      - id: calling_convention
+        type: u1
+        enum: tpi::calling_convention
+        doc: 'calling convention (call_t)'
+      - id: attributes
+        type: cv_func_attributes
+        doc: 'attributes'
+      - id: parameters_count
+        type: u2
+        doc: 'number of parameters'
+      - id: argument_list_type
+        type: tpi_type_ref16
+        doc: 'type index of argument list'
+      - id: this_adjuster
+        type: u4
+        doc: 'this adjuster (long because pad required anyway)'
   lf_mfunction:
     seq:
       - id: return_type
@@ -719,6 +856,19 @@ types:
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name of method'
+  ml_method_16t:
+    seq:
+      - id: attributes
+        type: cv_field_attributes
+        doc: 'method attribute'
+      - id: index_type
+        type: tpi_type_ref16
+        doc: 'index to type record for procedure'
+      - id: vtable_offset
+        if: attributes.method_properties == tpi::cv_methodprop::intro
+          or attributes.method_properties == tpi::cv_methodprop::pure_intro
+        type: u4
+        doc: 'offset in vfunctable if intro virtual'
   ml_method:
     seq:
       - id: attributes
@@ -727,16 +877,40 @@ types:
       - size: 2
       - id: index_type
         type: tpi_type_ref
+        doc: 'index to type record for procedure'
       - id: vtable_offset
         if: attributes.method_properties == tpi::cv_methodprop::intro
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
         doc: 'offset in vfunctable if intro virtual'
+  lf_methodlist_16t:
+    seq:
+      - id: methods
+        type: ml_method_16t
+        repeat: eos
   lf_methodlist:
     seq:
       - id: methods
         type: ml_method
         repeat: eos
+  lf_procedure_16t:
+    seq:
+      - id: return_value_type
+        type: tpi_type_ref16
+        doc: 'type index of return value'
+      - id: calling_convention
+        type: u1
+        enum: tpi::calling_convention
+        doc: 'calling convention (CV_call_t)'
+      - id: function_attributes
+        type: cv_func_attributes
+        doc: 'attributes'
+      - id: parameter_count
+        type: u2
+        doc: 'number of parameters'
+      - id: arglist
+        type: tpi_type_ref16
+        doc: 'type index of argument list'
   lf_procedure:
     seq:
       - id: return_value_type
@@ -805,24 +979,34 @@ types:
             tpi::leaf_type::lf_enum: lf_enum(false)
             tpi::leaf_type::lf_enum_st: lf_enum(true)
             tpi::leaf_type::lf_fieldlist: lf_fieldlist
+            tpi::leaf_type::lf_fieldlist_16t: lf_fieldlist_16t
             tpi::leaf_type::lf_pointer: lf_pointer
+            tpi::leaf_type::lf_pointer_16t: lf_pointer_16t
             tpi::leaf_type::lf_class: lf_class(false)
+            tpi::leaf_type::lf_class_16t: lf_class_16t
             tpi::leaf_type::lf_class_st: lf_class(true)
             tpi::leaf_type::lf_structure: lf_class(false)
             tpi::leaf_type::lf_structure_st: lf_class(true)
+            tpi::leaf_type::lf_structure_16t: lf_class_16t
             tpi::leaf_type::lf_array: lf_array(false)
             tpi::leaf_type::lf_array_st: lf_array(true)
+            tpi::leaf_type::lf_array_16t: lf_array_16t
             tpi::leaf_type::lf_procedure: lf_procedure
+            tpi::leaf_type::lf_procedure_16t: lf_procedure_16t
             tpi::leaf_type::lf_member: lf_member
             tpi::leaf_type::lf_modifier: lf_modifier
+            tpi::leaf_type::lf_modifier_16t: lf_modifier_16t
             tpi::leaf_type::lf_one_method: lf_one_method
             tpi::leaf_type::lf_mfunction: lf_mfunction
+            tpi::leaf_type::lf_mfunction_16t: lf_mfunction_16t
             tpi::leaf_type::lf_arglist: lf_arglist
+            tpi::leaf_type::lf_arglist_16t: lf_arglist_16t
             tpi::leaf_type::lf_bitfield: lf_bitfield
             tpi::leaf_type::lf_union: lf_union(false)
             tpi::leaf_type::lf_union_st: lf_union(true)
             tpi::leaf_type::lf_vtshape: lf_vtshape
             tpi::leaf_type::lf_methodlist: lf_methodlist
+            tpi::leaf_type::lf_methodlist_16t: lf_methodlist_16t
             _: lf_unknown
       - id: invoke_end_body
         if: end_body_pos >= 0
@@ -845,11 +1029,14 @@ types:
         value: 'has_padding ? trailing_byte & 0xF : 0'
       end_body_pos:
         value: _io.pos
-  tpi_type_ds:
+  tpi_type:
     params:
       - id: ti
         type: u4
     seq:
+      - id: hash
+        if: _root.pdb_type == pdb_type::old
+        type: u2
       - id: length
         type: u2
       - id: invoke_data_pos
@@ -870,7 +1057,7 @@ types:
     instances:
       types:
         pos: 0
-        type: tpi_type_ds(_root.tpi.header.min_type_index + _index)
+        type: tpi_type(_root.min_type_index + _index)
         repeat: eos
   tpi:
     enums:
@@ -1655,6 +1842,29 @@ types:
         type: u4
       - id: page_map
         type: u4
+  pdb_header_jg_old:
+    seq:
+      - size: 2
+      - id: pdb_internal_version
+        type: u4
+        enum: pdb_version
+      - id: timestamp
+        type: u4
+      - id: age
+        type: u4
+      - id: min_ti
+        type: u2
+      - id: max_ti
+        type: u2
+      - id: gp_rec_size
+        type: u4
+  pdb_jg_old:
+    seq:
+      - id: header
+        type: pdb_header_jg_old
+      - id: types
+        repeat: eos
+        type: tpi_type(header.min_ti + _index)
   pdb_jg:
     seq:
       - id: header
@@ -1716,8 +1926,11 @@ seq:
     if: signature.id == "DS"
     type: pdb_ds
   - id: pdb_jg
-    if: signature.id == "JG"
+    if: signature.id == "JG" and signature.version_major == "2"
     type: pdb_jg
+  - id: pdb_jg_old
+    if: signature.id == "JG" and signature.version_major == "1"
+    type: pdb_jg_old
 instances:
   page_number_size:
     value: 'pdb_type == pdb_type::big ? 4 : 2'
@@ -1732,20 +1945,38 @@ instances:
       : pdb_type == pdb_type::small ? page_size_jg
       : 0'
   pdb_type:
-    value: '_root.signature.id == "DS" ? pdb_type::big : 
-      _root.signature.id == "JG" ? pdb_type::small : pdb_type::old'
+    value: '_root.signature.id == "DS"
+      ? pdb_type::big 
+      : (_root.signature.id == "JG" and _root.signature.version_major == "2")
+      ? pdb_type::small
+      : pdb_type::old'
   num_streams:
     value: 'pdb_type == pdb_type::big
       ? pdb_ds.stream_table.num_streams
-      : pdb_jg.stream_table.num_streams'
+      : pdb_type == pdb_type::small 
+      ? pdb_jg.stream_table.num_streams : 0'
   zzz_tpi_data:
     type: get_stream_data(default_stream::tpi.to_i)
   zzz_dbi_data:
     type: get_stream_data(default_stream::dbi.to_i)
   stream_table:
+    if: pdb_type == pdb_type::big or pdb_type == pdb_type::small
     value: 'pdb_type == pdb_type::big 
           ? _root.pdb_ds.stream_table
           : _root.pdb_jg.stream_table'
+  
+  min_type_index:
+    value: 'pdb_type == pdb_type::old
+      ? pdb_jg_old.header.min_ti
+      : tpi.header.min_type_index'
+  max_type_index:
+    value: 'pdb_type == pdb_type::old
+      ? pdb_jg_old.header.max_ti
+      : tpi.header.max_type_index'
+  types:
+    value: 'pdb_type == pdb_type::old
+      ? pdb_jg_old.types
+      : tpi.types.types'
   tpi:
     size: 0
     type: tpi
@@ -1765,4 +1996,15 @@ enums:
     2: tpi
     3: dbi
     4: ipi
+  pdb_version:
+    920924: v41
+    #19960502: v50
+    19960502: v60
+    19970116: v50a
+    19980914: v61
+    19990511: v69
+    20000406: v70_deprecated
+    20001102: v70
+    20030901: v80
+    20091201: v110
   
