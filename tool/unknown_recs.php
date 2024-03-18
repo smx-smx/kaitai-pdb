@@ -12,6 +12,7 @@ function get_methods($x){
 }
 
 $lfTypes = array_flip((new ReflectionClass('\Pdb\Tpi\LeafType'))->getConstants());
+$symTypes = array_flip((new ReflectionClass('\Pdb\Dbi\SymbolType'))->getConstants());
 
 if($argc < 2){
 	fwrite(STDERR, "Usage: {$argv[0]} <file.pdb>\n");
@@ -22,6 +23,7 @@ if($argc < 2){
 $pdb = Pdb::fromFile($argv[1]);
 
 $seen = [];
+
 $types = $pdb->types();
 foreach($types as $i => $t){
 	$d = $t->data();
@@ -33,7 +35,7 @@ foreach($types as $i => $t){
 		$body_data = $body->data();
 		$typeName = $lfTypes[$d->type()];
 		if(!isset($seen[$typeName])){
-			print($lfTypes[$d->type()] . "\n");
+			print("{$typeName}\n");
 			$seen[$typeName] = true;
 			print(bin2hex($body_data) . "\n");
 		}
@@ -41,4 +43,29 @@ foreach($types as $i => $t){
 	}
 	//print(get_class($d) . "\n");
 	//print_r(get_methods($d));
+}
+
+$mods = $pdb->dbi()->modules()->modules();
+foreach($mods as $i => $m){
+	$md = $m->moduleData();
+	if($md === null) continue;
+	$sd = $md->symbols();
+	if($sd === null) continue;
+	
+	$syms = $sd->symbols();
+	foreach($syms as $j => $s){
+		$sd = $s->data();
+		$type = $sd->type();
+		$body = $sd->body();
+		if($body === null) continue;
+		if(get_class($body) === "Pdb\SymUnknown"){
+			$body_data = $body->data();
+			$symTypeName = $symTypes[$type];
+			if(!isset($seen[$symTypeName])){
+				print("{$symTypeName}\n");
+				$seen[$symTypeName] = true;
+				print(bin2hex($body_data) . "\n");
+			}
+		}
+	}
 }
