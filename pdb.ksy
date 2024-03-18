@@ -489,23 +489,9 @@ types:
       - id: field_type
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
-      - id: name_length
-        if: string_prefixed
-        type: u1
-      - id: name_prefixed
-        if: string_prefixed
-        type: str
-        encoding: UTF-8
-        size: name_length
-      - id: name_cstring
-        if: not string_prefixed
-        type: str
-        encoding: UTF-8
-        terminator: 0
+      - id: name
+        type: tpi_string(string_prefixed)
         doc: 'length prefixed name of enum'
-    instances:
-      name:
-        value: 'string_prefixed ? name_prefixed : name_cstring'
   lf_enumerate:
     seq:
       - id: attributes
@@ -545,6 +531,9 @@ types:
       - id: position
         type: u1
   lf_array:
+    params:
+      - id: string_prefixed
+        type: bool
     seq:
       - id: element_type
         type: tpi_type_ref
@@ -556,11 +545,33 @@ types:
         type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
       - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'array name'
+  tpi_string:
+    params:
+      - id: is_prefixed
+        type: bool
+    seq:
+      - id: name_length
+        if: is_prefixed
+        type: u1
+      - id: name_prefixed
+        if: is_prefixed
+        type: str
+        encoding: UTF-8
+        size: name_length
+      - id: name_cstring
+        if: not is_prefixed
         type: str
         encoding: UTF-8
         terminator: 0
-        doc: 'array name'
+    instances:
+      name:
+        value: 'is_prefixed ? name_prefixed : name_cstring'
   lf_class:
+    params:
+      - id: string_prefixed
+        type: bool
     seq:
       - id: number_of_elements
         type: u2
@@ -581,9 +592,7 @@ types:
         type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
       - id: name
-        type: str
-        encoding: UTF-8
-        terminator: 0
+        type: tpi_string(string_prefixed)
         doc: 'class name'
   lf_pointer_attributes:
     seq:
@@ -757,6 +766,9 @@ types:
         repeat: expr
         repeat-expr: count
   lf_union:
+    params:
+      - id: string_prefixed
+        type: bool
     seq:
       - id: count
         type: u2
@@ -771,9 +783,7 @@ types:
         type: cv_numeric_type
         doc: 'variable length data describing length of structure'
       - id: name
-        type: str
-        encoding: UTF-8
-        terminator: 0
+        type: tpi_string(string_prefixed)
         doc: 'array name'
   lf_unknown:
     seq:
@@ -796,9 +806,12 @@ types:
             tpi::leaf_type::lf_enum_st: lf_enum(true)
             tpi::leaf_type::lf_fieldlist: lf_fieldlist
             tpi::leaf_type::lf_pointer: lf_pointer
-            tpi::leaf_type::lf_class: lf_class
-            tpi::leaf_type::lf_structure: lf_class
-            tpi::leaf_type::lf_array: lf_array
+            tpi::leaf_type::lf_class: lf_class(false)
+            tpi::leaf_type::lf_class_st: lf_class(true)
+            tpi::leaf_type::lf_structure: lf_class(false)
+            tpi::leaf_type::lf_structure_st: lf_class(true)
+            tpi::leaf_type::lf_array: lf_array(false)
+            tpi::leaf_type::lf_array_st: lf_array(true)
             tpi::leaf_type::lf_procedure: lf_procedure
             tpi::leaf_type::lf_member: lf_member
             tpi::leaf_type::lf_modifier: lf_modifier
@@ -806,7 +819,8 @@ types:
             tpi::leaf_type::lf_mfunction: lf_mfunction
             tpi::leaf_type::lf_arglist: lf_arglist
             tpi::leaf_type::lf_bitfield: lf_bitfield
-            tpi::leaf_type::lf_union: lf_union
+            tpi::leaf_type::lf_union: lf_union(false)
+            tpi::leaf_type::lf_union_st: lf_union(true)
             tpi::leaf_type::lf_vtshape: lf_vtshape
             tpi::leaf_type::lf_methodlist: lf_methodlist
             _: lf_unknown
