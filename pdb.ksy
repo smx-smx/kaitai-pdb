@@ -473,6 +473,9 @@ types:
         if: array_index >= 0
         value: _root.tpi.types.types[array_index]
   lf_enum:
+    params:
+      - id: string_prefixed
+        type: bool
     seq:
       - id: num_elements
         type: u2
@@ -486,11 +489,23 @@ types:
       - id: field_type
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
-      - id: name
+      - id: name_length
+        if: string_prefixed
+        type: u1
+      - id: name_prefixed
+        if: string_prefixed
+        type: str
+        encoding: UTF-8
+        size: name_length
+      - id: name_cstring
+        if: not string_prefixed
         type: str
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name of enum'
+    instances:
+      name:
+        value: 'string_prefixed ? name_prefixed : name_cstring'
   lf_enumerate:
     seq:
       - id: attributes
@@ -777,7 +792,8 @@ types:
           switch-on: type
           cases:
             tpi::leaf_type::lf_enumerate: lf_enumerate
-            tpi::leaf_type::lf_enum: lf_enum
+            tpi::leaf_type::lf_enum: lf_enum(false)
+            tpi::leaf_type::lf_enum_st: lf_enum(true)
             tpi::leaf_type::lf_fieldlist: lf_fieldlist
             tpi::leaf_type::lf_pointer: lf_pointer
             tpi::leaf_type::lf_class: lf_class
