@@ -1757,6 +1757,50 @@ types:
       - id: hdr
         type: image_section_header
         repeat: eos
+  fpo_data:
+    enums:
+      frame_type:
+        0: fpo
+        1: trap
+        2: tss
+        3: std
+    seq:
+      - id: start_offset
+        type: u4
+        doc: 'offset 1st byte of function code'
+      - id: proc_size
+        type: u4
+        doc: '# bytes in function'
+      - id: num_dwords_locals
+        type: u4
+        doc: '# bytes in locals/4'
+      - id: num_dwords_params
+        type: u2
+        doc: '# bytes in params/4'
+      - id: prolog_size
+        type: u1
+        doc: '# bytes in prolog'
+      - id: regs_size
+        type: b3
+        doc: '# regs saved'
+      - id: has_seh
+        type: b1
+        doc: 'TRUE if SEH in func'
+      - id: use_bp
+        type: b1
+        doc: 'TRUE if EBP has been allocated'
+      - id: reserved
+        type: b1
+        doc: 'reserved for future use'
+      - id: frame_type
+        type: b2
+        doc: 'frame type'
+        enum: frame_type
+  fpo_stream:
+    seq:
+      - id: items
+        repeat: eos
+        type: fpo_data
   debug_data:
     seq:
       - id: fpo_stream
@@ -1782,6 +1826,11 @@ types:
       - id: section_hdr_orig_stream
         type: pdb_stream_ref
     instances:
+      fpo_stream_data:
+        if: fpo_stream.stream_number > -1
+        size: 0
+        process: cat(fpo_stream.data)
+        type: fpo_stream
       section_hdr_stream_data:
         if: section_hdr_stream.stream_number > -1
         size: 0
