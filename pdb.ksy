@@ -454,6 +454,32 @@ types:
       - id: mocom
         type: b2
         enum: tpi::cv_mocom_udt
+  cv_proc_flags:
+    seq:
+      - id: nofpo
+        type: b1
+        doc: 'frame pointer present'
+      - id: interrupt
+        type: b1
+        doc: 'interrupt return'
+      - id: far_return
+        type: b1
+        doc: 'far return'
+      - id: never
+        type: b1
+        doc: 'function does not return'
+      - id: not_reached
+        type: b1
+        doc: 'label isn''t fallen into'
+      - id: cust_call
+        type: b1
+        doc: 'custom calling convention'
+      - id: no_inline
+        type: b1
+        doc: 'function marked as noinline'
+      - id: opt_debug_info
+        type: b1
+        doc: 'function has debug information for optimized code'
   cv_func_attributes:
     seq:
       - id: cxx_return_udt
@@ -1554,6 +1580,90 @@ types:
       - id: ver
         type: tpi_string(true)
         doc: 'Length-prefixed compiler version string'
+  sym_constant:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index (containing enum if enumerate) or metadata token'
+      - id: value
+        type: u2
+        doc: 'numeric leaf containing value'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_udt:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_proc32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+      - id: next
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to next symbol'
+      - id: length
+        type: u4
+        doc: 'Proc length'
+      - id: dbg_start
+        type: u4
+        doc: 'Debug start offset'
+      - id: dbg_end
+        type: u4
+        doc: 'Debug end offset'
+      # FIXME: ID handling
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index or ID'
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: flags
+        type: cv_proc_flags
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  dbi_symbol_ref:
+    params:
+      - id: module_index
+        type: u4
+    seq:
+      - id: offset
+        type: u4
+    instances:
+      zzz_module_io:
+        type: get_module_io(module_index)
+      module_io:
+        value: zzz_module_io.value
+      symbol:
+        io: module_io
+        pos: offset
+        type: dbi_symbol(module_index)
+  get_module_io:
+    params:
+      - id: module_index
+        type: u4
+    instances:
+      value:
+        value: _root.dbi.modules.modules[module_index].module_data.symbols._io
   dbi_symbol_data:
     params:
       - id: length
@@ -1570,8 +1680,23 @@ types:
             dbi::symbol_type::s_objname: sym_objname(false)
             dbi::symbol_type::s_objname_st: sym_objname(true)
             dbi::symbol_type::s_compile: sym_compile
+            dbi::symbol_type::s_constant: sym_constant(false)
+            dbi::symbol_type::s_constant_st: sym_constant(true)
+            dbi::symbol_type::s_udt: sym_udt(false)
+            dbi::symbol_type::s_udt_st: sym_udt(true)
+            dbi::symbol_type::s_gproc32: sym_proc32(false)
+            dbi::symbol_type::s_gproc32_st: sym_proc32(true)
+            dbi::symbol_type::s_lproc32: sym_proc32(false)
+            dbi::symbol_type::s_lproc32_st: sym_proc32(true)
+            dbi::symbol_type::s_lproc32_dpc: sym_proc32(false)
             _: sym_unknown
+    instances:
+      module_index:
+        value: _parent.module_index
   dbi_symbol:
+    params:
+      - id: module_index
+        type: u4
     seq:
       - id: length
         type: u2
@@ -1589,12 +1714,18 @@ types:
         type: dbi_symbol_data(length)
         if: length > 0
   module_symbols:
+    params:
+      - id: module_index
+        type: u4
     instances:
       symbols:
         pos: 0
-        type: dbi_symbol
+        type: dbi_symbol(module_index)
         repeat: eos
   module_stream:
+    params:
+      - id: module_index
+        type: u4
     enums:
       cv_signature:
         0: c6
@@ -1608,11 +1739,14 @@ types:
       - id: symbols
         if: symbols_size > 0
         size: symbols_size
-        type: module_symbols
+        type: module_symbols(module_index)
     instances:
       symbols_size:
         value: _parent.symbols_size - 4
   module_info:
+    params:
+      - id: module_index
+        type: u4
     seq:
       - id: invoke_position_start
         size: 0
@@ -1662,7 +1796,7 @@ types:
           size: 0
           if: stream.stream_number > -1
           process: cat(stream.data)
-          type: module_stream
+          type: module_stream(module_index)
       padding_size:
         value: alignment.aligned - position_end
       alignment:
@@ -1674,7 +1808,7 @@ types:
   module_list:
     seq:
       - id: modules
-        type: module_info
+        type: module_info(_index)
         repeat: eos
       - size-eos: true
   section_contribution_list:

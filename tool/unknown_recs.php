@@ -30,8 +30,8 @@ foreach($types as $i => $t){
 	$ti = $t->ti();
 	$type = $d->type();
 	$body = $d->body();
-	//printf("i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
 	if(get_class($body) === "Pdb\LfUnknown"){
+		printf("[type] i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
 		$body_data = $body->data();
 		$typeName = $lfTypes[$d->type()];
 		if(!isset($seen[$typeName])){
@@ -61,6 +61,7 @@ foreach($mods as $i => $m){
 		if(get_class($body) === "Pdb\SymUnknown"){
 			$body_data = $body->data();
 			$symTypeName = $symTypes[$type];
+			//printf("[sym] mod: %d, sym: %d, %s\n", $i, $j, $symTypeName);
 			if(!isset($seen[$symTypeName])){
 				print("{$symTypeName}\n");
 				$seen[$symTypeName] = true;
