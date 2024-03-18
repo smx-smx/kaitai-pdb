@@ -573,7 +573,7 @@ types:
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'length prefixed name of enum'
   lf_enumerate:
     seq:
@@ -641,7 +641,7 @@ types:
         type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
       - id: name
-        type: tpi_string(true)
+        type: pdb_string(true)
         doc: 'array name'
   lf_array:
     params:
@@ -658,9 +658,9 @@ types:
         type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'array name'
-  tpi_string:
+  pdb_string:
     params:
       - id: is_prefixed
         type: bool
@@ -702,7 +702,7 @@ types:
         type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
       - id: name
-        type: tpi_string(true)
+        type: pdb_string(true)
         doc: 'class name'
   lf_class:
     params:
@@ -728,7 +728,7 @@ types:
         type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'class name'
   lf_pointer_attributes_16t:
     seq:
@@ -818,7 +818,7 @@ types:
         type: cv_numeric_type
         doc: 'variable length offset of field'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'length prefixed name of field'
   lf_modifier_flags:
     seq:
@@ -1021,7 +1021,7 @@ types:
         type: cv_numeric_type
         doc: 'variable length data describing length of structure'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'array name'
   sym_unknown:
     seq:
@@ -1546,7 +1546,7 @@ types:
         type: u4
         doc: 'signature'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_compile:
     seq:
@@ -1578,7 +1578,7 @@ types:
         type: b4
         doc: 'reserved'
       - id: ver
-        type: tpi_string(true)
+        type: pdb_string(true)
         doc: 'Length-prefixed compiler version string'
   sym_constant:
     params:
@@ -1592,7 +1592,7 @@ types:
         type: u2
         doc: 'numeric leaf containing value'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_udt:
     params:
@@ -1603,7 +1603,7 @@ types:
         type: tpi_type_ref
         doc: 'Type index'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_label32:
     params:
@@ -1618,7 +1618,7 @@ types:
         type: cv_proc_flags
         doc: 'flags'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_register32:
     params:
@@ -1632,7 +1632,7 @@ types:
         type: u2
         doc: 'register enumerate'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_bprel32:
     params:
@@ -1646,7 +1646,7 @@ types:
         type: tpi_type_ref
         doc: 'Type index or Metadata token'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_data32:
     params:
@@ -1661,7 +1661,7 @@ types:
       - id: segment
         type: u2
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_proc32:
     params:
@@ -1697,7 +1697,7 @@ types:
       - id: flags
         type: cv_proc_flags
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
   sym_thunk32:
     params:
@@ -1724,7 +1724,7 @@ types:
         type: u1
         doc: 'ordinal specifying type of thunk'
       - id: name
-        type: tpi_string(string_prefixed)
+        type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
       # FIXME
       - id: variant
