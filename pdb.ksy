@@ -1507,6 +1507,101 @@ types:
       - id: tsm_list_index
         type: b8
         doc: 'index into TSM list for this mods server'
+  sym_objname:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: signature
+        type: u4
+        doc: 'signature'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_compile:
+    seq:
+      - id: machine
+        type: u1
+        doc: 'target processor'
+      - id: language
+        type: u1
+        doc: 'language index'
+      - id: pcode
+        type: b1
+        doc: 'true if pcode present'
+      - id: floatprec
+        type: b2
+        doc: 'floating precision'
+      - id: floatpkg
+        type: b2
+        doc: 'float package'
+      - id: ambdata
+        type: b3
+        doc: 'ambient data model'
+      - id: ambcode
+        type: b3
+        doc: 'ambient code model'
+      - id: mode32
+        type: b1
+        doc: 'true if compiled 32 bit mode'
+      - id: pad
+        type: b4
+        doc: 'reserved'
+      - id: ver
+        type: tpi_string(true)
+        doc: 'Length-prefixed compiler version string'
+  dbi_symbol_data:
+    seq:
+      - id: type
+        type: u2
+        enum: dbi::symbol_type
+      - id: body
+        type:
+          switch-on: type
+          cases:
+            dbi::symbol_type::s_objname: sym_objname(false)
+            dbi::symbol_type::s_objname_st: sym_objname(true)
+            dbi::symbol_type::s_compile: sym_compile
+  dbi_symbol:
+    seq:
+      - id: length
+        type: u2
+      - id: invoke_data_pos
+        if: data_pos >= 0
+        size: 0
+      # skip data
+      - size: length
+    instances:
+      data_pos:
+        value: _io.pos
+      data:
+        pos: data_pos
+        size: length
+        type: dbi_symbol_data
+        if: length > 0
+  module_symbols:
+    instances:
+      symbols:
+        pos: 0
+        type: dbi_symbol
+        repeat: eos
+  module_stream:
+    enums:
+      cv_signature:
+        0: c6
+        1: c7
+        2: c11
+        4: c13
+    seq:
+      - id: signature
+        type: u4
+        enum: cv_signature
+      - id: symbols
+        size: symbols_size
+        type: module_symbols
+    instances:
+      symbols_size:
+        value: _parent.symbols_size - 4
   module_info:
     seq:
       - id: invoke_position_start
@@ -1553,6 +1648,11 @@ types:
       - id: padding
         size: padding_size
     instances:
+      module_data:
+          size: 0
+          if: stream.stream_number > -1
+          process: cat(stream.data)
+          type: module_stream
       padding_size:
         value: alignment.aligned - position_end
       alignment:
@@ -1882,6 +1982,204 @@ types:
         process: cat(section_hdr_stream.data)
         type: debug_section_hdr_stream
   dbi:
+    enums:
+      symbol_type:
+        0x0001: s_compile
+        0x0002: s_register_16t
+        0x0003: s_constant_16t
+        0x0004: s_udt_16t
+        0x0005: s_ssearch
+        0x0006: s_end
+        0x0007: s_skip
+        0x0008: s_cvreserve
+        0x0009: s_objname_st
+        0x000a: s_endarg
+        0x000b: s_coboludt_16t
+        0x000c: s_manyreg_16t
+        0x000d: s_return
+        0x000e: s_entrythis
+        0x0100: s_bprel16
+        0x0101: s_ldata16
+        0x0102: s_gdata16
+        0x0103: s_pub16
+        0x0104: s_lproc16
+        0x0105: s_gproc16
+        0x0106: s_thunk16
+        0x0107: s_block16
+        0x0108: s_with16
+        0x0109: s_label16
+        0x010a: s_cexmodel16
+        0x010b: s_vftable16
+        0x010c: s_regrel16
+        0x0200: s_bprel32_16t
+        0x0201: s_ldata32_16t
+        0x0202: s_gdata32_16t
+        0x0203: s_pub32_16t
+        0x0204: s_lproc32_16t
+        0x0205: s_gproc32_16t
+        0x0206: s_thunk32_st
+        0x0207: s_block32_st
+        0x0208: s_with32_st
+        0x0209: s_label32_st
+        0x020a: s_cexmodel32
+        0x020b: s_vftable32_16t
+        0x020c: s_regrel32_16t
+        0x020d: s_lthread32_16t
+        0x020e: s_gthread32_16t
+        0x020f: s_slink32
+        0x0300: s_lprocmips_16t
+        0x0301: s_gprocmips_16t
+        0x0400: s_procref_st
+        0x0401: s_dataref_st
+        0x0402: s_align
+        0x0403: s_lprocref_st
+        0x0404: s_oem
+        0x1000: s_ti16_max
+        0x1001: s_register_st
+        0x1002: s_constant_st
+        0x1003: s_udt_st
+        0x1004: s_coboludt_st
+        0x1005: s_manyreg_st
+        0x1006: s_bprel32_st
+        0x1007: s_ldata32_st
+        0x1008: s_gdata32_st
+        0x1009: s_pub32_st
+        0x100a: s_lproc32_st
+        0x100b: s_gproc32_st
+        0x100c: s_vftable32
+        0x100d: s_regrel32_st
+        0x100e: s_lthread32_st
+        0x100f: s_gthread32_st
+        0x1010: s_lprocmips_st
+        0x1011: s_gprocmips_st
+        0x1012: s_frameproc
+        0x1013: s_compile2_st
+        0x1014: s_manyreg2_st
+        0x1015: s_lprocia64_st
+        0x1016: s_gprocia64_st
+        0x1017: s_localslot_st
+        0x1018: s_paramslot_st
+        0x1019: s_annotation
+        0x101a: s_gmanproc_st
+        0x101b: s_lmanproc_st
+        0x101c: s_reserved1
+        0x101d: s_reserved2
+        0x101e: s_reserved3
+        0x101f: s_reserved4
+        0x1020: s_lmandata_st
+        0x1021: s_gmandata_st
+        0x1022: s_manframerel_st
+        0x1023: s_manregister_st
+        0x1024: s_manslot_st
+        0x1025: s_manmanyreg_st
+        0x1026: s_manregrel_st
+        0x1027: s_manmanyreg2_st
+        0x1028: s_mantypref
+        0x1029: s_unamespace_st
+        0x1100: s_st_max
+        0x1101: s_objname
+        0x1102: s_thunk32
+        0x1103: s_block32
+        0x1104: s_with32
+        0x1105: s_label32
+        0x1106: s_register
+        0x1107: s_constant
+        0x1108: s_udt
+        0x1109: s_coboludt
+        0x110a: s_manyreg
+        0x110b: s_bprel32
+        0x110c: s_ldata32
+        0x110d: s_gdata32
+        0x110e: s_pub32
+        0x110f: s_lproc32
+        0x1110: s_gproc32
+        0x1111: s_regrel32
+        0x1112: s_lthread32
+        0x1113: s_gthread32
+        0x1114: s_lprocmips
+        0x1115: s_gprocmips
+        0x1116: s_compile2
+        0x1117: s_manyreg2
+        0x1118: s_lprocia64
+        0x1119: s_gprocia64
+        0x111a: s_localslot
+        0x111b: s_paramslot
+        0x111c: s_lmandata
+        0x111d: s_gmandata
+        0x111e: s_manframerel
+        0x111f: s_manregister
+        0x1120: s_manslot
+        0x1121: s_manmanyreg
+        0x1122: s_manregrel
+        0x1123: s_manmanyreg2
+        0x1124: s_unamespace
+        0x1125: s_procref
+        0x1126: s_dataref
+        0x1127: s_lprocref
+        0x1128: s_annotationref
+        0x1129: s_tokenref
+        0x112a: s_gmanproc
+        0x112b: s_lmanproc
+        0x112c: s_trampoline
+        0x112d: s_manconstant
+        0x112e: s_attr_framerel
+        0x112f: s_attr_register
+        0x1130: s_attr_regrel
+        0x1131: s_attr_manyreg
+        0x1132: s_sepcode
+        0x1133: s_local_2005
+        0x1134: s_defrange_2005
+        0x1135: s_defrange2_2005
+        0x1136: s_section
+        0x1137: s_coffgroup
+        0x1138: s_export
+        0x1139: s_callsiteinfo
+        0x113a: s_framecookie
+        0x113b: s_discarded
+        0x113c: s_compile3
+        0x113d: s_envblock
+        0x113e: s_local
+        0x113f: s_defrange
+        0x1140: s_subfield
+        0x1141: s_defrange_register
+        0x1142: s_defrange_framepointer_rel
+        0x1143: s_defrange_subfield_register
+        0x1144: s_defrange_framepointer_rel_full_scope
+        0x1145: s_defrange_register_rel
+        0x1146: s_lproc32_id
+        0x1147: s_gproc32_id
+        0x1148: s_lprocmips_id
+        0x1149: s_gprocmips_id
+        0x114a: s_lprocia64_id
+        0x114b: s_gprocia64_id
+        0x114c: s_buildinfo
+        0x114d: s_inlinesite
+        0x114e: s_inlinesite_end
+        0x114f: s_proc_id_end
+        0x1150: s_defrange_hlsl
+        0x1151: s_gdata_hlsl
+        0x1152: s_ldata_hlsl
+        0x1153: s_filestatic
+        0x1154: s_local_dpc_groupshared
+        0x1155: s_lproc32_dpc
+        0x1156: s_lproc32_dpc_id
+        0x1157: s_defrange_dpc_ptr_tag
+        0x1158: s_dpc_sym_tag_map
+        0x1159: s_armswitchtable
+        0x115a: s_callees
+        0x115b: s_callers
+        0x115c: s_pogodata
+        0x115d: s_inlinesite2
+        0x115e: s_heapallocsite
+        0x115f: s_mod_typeref
+        0x1160: s_ref_minipdb
+        0x1161: s_pdbmap
+        0x1162: s_gdata_hlsl32
+        0x1163: s_ldata_hlsl32
+        0x1164: s_gdata_hlsl32_ex
+        0x1165: s_ldata_hlsl32_ex
+        0x1167: s_fastlink
+        0x1168: s_inlinees
     seq:
       - id: header_old
         if: is_new_hdr == false
