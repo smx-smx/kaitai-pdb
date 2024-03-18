@@ -1605,6 +1605,64 @@ types:
       - id: name
         type: tpi_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_label32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: flags
+        type: cv_proc_flags
+        doc: 'flags'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_register32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+      - id: register
+        type: u2
+        doc: 'register enumerate'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_bprel32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: offset
+        type: u4
+        doc: 'BP-relative offset'
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index or Metadata token'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_data32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
   sym_proc32:
     params:
       - id: string_prefixed
@@ -1641,6 +1699,36 @@ types:
       - id: name
         type: tpi_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_thunk32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+      - id: next
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to next symbol'
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: length
+        type: u2
+        doc: 'length of thunk'
+      - id: ordinal
+        type: u1
+        doc: 'ordinal specifying type of thunk'
+      - id: name
+        type: tpi_string(string_prefixed)
+        doc: 'Length-prefixed name'
+      # FIXME
+      - id: variant
+        size-eos: true
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -1689,6 +1777,20 @@ types:
             dbi::symbol_type::s_lproc32: sym_proc32(false)
             dbi::symbol_type::s_lproc32_st: sym_proc32(true)
             dbi::symbol_type::s_lproc32_dpc: sym_proc32(false)
+            dbi::symbol_type::s_bprel32: sym_bprel32(false)
+            dbi::symbol_type::s_bprel32_st: sym_bprel32(true)
+            dbi::symbol_type::s_register: sym_register32(false)
+            dbi::symbol_type::s_register_st: sym_register32(true)
+            dbi::symbol_type::s_label32: sym_label32(false)
+            dbi::symbol_type::s_label32_st: sym_label32(true)
+            dbi::symbol_type::s_ldata32: sym_data32(false)
+            dbi::symbol_type::s_ldata32_st: sym_data32(true)
+            dbi::symbol_type::s_gdata32: sym_data32(false)
+            dbi::symbol_type::s_gdata32_st: sym_data32(true)
+            dbi::symbol_type::s_pub32: sym_data32(false)
+            dbi::symbol_type::s_pub32_st: sym_data32(true)
+            dbi::symbol_type::s_thunk32: sym_thunk32(false)
+            dbi::symbol_type::s_thunk32_st: sym_thunk32(true)
             _: sym_unknown
     instances:
       module_index:
