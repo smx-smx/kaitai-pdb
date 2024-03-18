@@ -997,6 +997,10 @@ types:
       - id: name
         type: tpi_string(string_prefixed)
         doc: 'array name'
+  sym_unknown:
+    seq:
+      - id: data
+        size-eos: true
   lf_unknown:
     seq:
       - id: data
@@ -1551,17 +1555,22 @@ types:
         type: tpi_string(true)
         doc: 'Length-prefixed compiler version string'
   dbi_symbol_data:
+    params:
+      - id: length
+        type: u2
     seq:
       - id: type
         type: u2
         enum: dbi::symbol_type
       - id: body
+        if: length > 2
         type:
           switch-on: type
           cases:
             dbi::symbol_type::s_objname: sym_objname(false)
             dbi::symbol_type::s_objname_st: sym_objname(true)
             dbi::symbol_type::s_compile: sym_compile
+            _: sym_unknown
   dbi_symbol:
     seq:
       - id: length
@@ -1577,7 +1586,7 @@ types:
       data:
         pos: data_pos
         size: length
-        type: dbi_symbol_data
+        type: dbi_symbol_data(length)
         if: length > 0
   module_symbols:
     instances:
@@ -1597,6 +1606,7 @@ types:
         type: u4
         enum: cv_signature
       - id: symbols
+        if: symbols_size > 0
         size: symbols_size
         type: module_symbols
     instances:
