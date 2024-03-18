@@ -778,6 +778,9 @@ types:
       - id: underlying_type
         type: tpi_type_ref16
   lf_member:
+    params:
+      - id: string_prefixed
+        type: bool
     seq:
       - id: attributes
         type: cv_field_attributes
@@ -789,9 +792,7 @@ types:
         type: cv_numeric_type
         doc: 'variable length offset of field'
       - id: name
-        type: str
-        encoding: UTF-8
-        terminator: 0
+        type: tpi_string(string_prefixed)
         doc: 'length prefixed name of field'
   lf_modifier_flags:
     seq:
@@ -1030,7 +1031,8 @@ types:
             tpi::leaf_type::lf_array_16t: lf_array_16t
             tpi::leaf_type::lf_procedure: lf_procedure
             tpi::leaf_type::lf_procedure_16t: lf_procedure_16t
-            tpi::leaf_type::lf_member: lf_member
+            tpi::leaf_type::lf_member: lf_member(false)
+            tpi::leaf_type::lf_member_st: lf_member(true)
             tpi::leaf_type::lf_modifier: lf_modifier
             tpi::leaf_type::lf_modifier_16t: lf_modifier_16t
             tpi::leaf_type::lf_one_method: lf_one_method
