@@ -169,10 +169,10 @@ types:
         type: pdb_stream_data(stream_size)
       zzz_stream_size:
         type: get_stream_size(stream_number)
-      zzz_num_directory_pages:
-        type: get_stream_num_pages(stream_number)
       num_directory_pages:
-        value: zzz_num_directory_pages.value
+        value: '_root.pdb_type == pdb_type::big
+          ? _parent.stream_sizes_ds[stream_number].num_directory_pages
+          : _parent.stream_sizes_jg[stream_number].num_directory_pages'
       stream_size:
         value: zzz_stream_size.value
   get_stream_num_pages:
@@ -1588,6 +1588,7 @@ types:
         size: 'is_new_hdr ? header_new.section_map_size : header_old.section_map_size'
         if: header_new.section_map_size > 0
         type: omf_segment_map
+      ## below portions are only present in DBI new
       - id: file_info
         if: is_new_hdr and header_new.file_info_size > 0
         size: header_new.file_info_size
@@ -1711,6 +1712,10 @@ instances:
     type: get_stream_data(default_stream::tpi.to_i)
   zzz_dbi_data:
     type: get_stream_data(default_stream::dbi.to_i)
+  stream_table:
+    value: 'pdb_type == pdb_type::big 
+          ? _root.pdb_ds.stream_table
+          : _root.pdb_jg.stream_table'
   tpi:
     size: 0
     type: tpi
