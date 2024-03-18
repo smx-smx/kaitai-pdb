@@ -1253,7 +1253,11 @@ types:
       - id: open_module_handle
         type: u4
       - id: section_contribution
-        type: section_contrib
+        type: 
+          switch-on: _root.pdb_type
+          cases:
+            pdb_type::big: section_contrib
+            pdb_type::small: section_contrib40
       - id: flags
         type: module_info_flags
       - id: stream
@@ -1300,6 +1304,7 @@ types:
       - id: modules
         type: module_info
         repeat: eos
+      - size-eos: true
   section_contribution_list:
     enums:
       version_type:
@@ -1308,9 +1313,6 @@ types:
         # 0xeffe0000 + 20140516
         0xF13151E4: new
     seq:
-      - id: version
-        type: u4
-        enum: version_type
       - id: items
         repeat: eos
         type:
@@ -1318,7 +1320,12 @@ types:
           cases:
             version_type::v60: section_contrib
             version_type::new: section_contrib2
+            _: section_contrib40
     instances:
+      version:
+        pos: 0
+        type: u4
+        enum: version_type
       item_size:
         value: 'version == version_type::new
           ? sizeof<section_contrib2> : version == version_type::v60
@@ -1564,40 +1571,42 @@ types:
   dbi:
     seq:
       - id: header_old
-        if: signature != -1
+        if: is_new_hdr == false
         type: dbi_header_old
       - id: header_new
-        if: signature == -1
+        if: is_new_hdr == true
         type: dbi_header_new
       - id: modules
-        size: header_new.module_list_size
         if: header_new.module_list_size > 0
+        size: 'is_new_hdr ? header_new.module_list_size : header_old.module_list_size'
         type: module_list
       - id: section_contributions
-        size: header_new.section_contribution_size
         if: header_new.section_contribution_size > 0
+        size: 'is_new_hdr ? header_new.section_contribution_size : header_old.section_contribution_size'
         type: section_contribution_list
       - id: section_map
-        size: header_new.section_map_size
+        size: 'is_new_hdr ? header_new.section_map_size : header_old.section_map_size'
         if: header_new.section_map_size > 0
         type: omf_segment_map
       - id: file_info
+        if: is_new_hdr and header_new.file_info_size > 0
         size: header_new.file_info_size
-        if: header_new.file_info_size > 0
         type: file_info
       - id: type_server_map
         size: header_new.type_server_map_size
-        if: header_new.type_server_map_size > 0
+        if: is_new_hdr and header_new.type_server_map_size > 0
         type: type_server_map
       - id: ec_info
+        if: is_new_hdr and header_new.ec_substream_size > 0
         size: header_new.ec_substream_size
-        if: header_new.ec_substream_size > 0
         type: name_table
       - id: debug_data
+        if: is_new_hdr and header_new.debug_header_size > 0
         size: header_new.debug_header_size
-        if: header_new.debug_header_size > 0
         type: debug_data
     instances:
+      is_new_hdr:
+        value: signature == -1
       # invalid gs/ps syms marker for DBI old/new detection
       signature:
         pos: 0
