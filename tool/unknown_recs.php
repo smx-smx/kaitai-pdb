@@ -57,13 +57,14 @@ foreach($mods as $i => $m){
 		$sd = $s->data();
 		$type = $sd->type();
 		$body = $sd->body();
+		$length = $sd->length();
 		if($body === null) continue;
 		if(get_class($body) === "Pdb\SymUnknown"){
 			$body_data = $body->data();
 			$symTypeName = $symTypes[$type];
 			//printf("[sym] mod: %d, sym: %d, %s\n", $i, $j, $symTypeName);
 			if(!isset($seen[$symTypeName])){
-				print("{$symTypeName}\n");
+				print("{$symTypeName} ({$length})\n");
 				$seen[$symTypeName] = true;
 				print(bin2hex($body_data) . "\n");
 			}

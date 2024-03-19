@@ -1023,6 +1023,27 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'array name'
+  sym_section:
+    seq:
+      - id: section_index
+        type: u2
+        doc: 'Section number'
+      - id: section_alignment
+        type: u1
+        doc: 'Alignment of this section (power of 2)'
+      - id: reserved
+        type: u1
+        doc: 'Reserved.  Must be zero.'
+      - id: rva
+        type: u4
+      - id: size
+        type: u4
+      - id: characteristics
+        type: u4
+      - id: name
+        type: str
+        encoding: UTF-8
+        terminator: 0
   sym_unknown:
     seq:
       - id: data
@@ -1130,6 +1151,11 @@ types:
         repeat: eos
   tpi:
     enums:
+      cv_cookietype:
+        0: copy
+        1: xor_sp
+        2: oxr_bp
+        3: xor_r13
       calling_convention:
         0: near_c
         1: far_c
@@ -1605,6 +1631,35 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_frame_cookie:
+    seq:
+      - id: offset
+        type: u4
+        doc: 'Frame relative offset'
+      - id: register
+        type: u2
+        doc: 'Register index'
+      - id: cookie_type
+        type: u1
+        enum: tpi::cv_cookietype
+        doc: 'Type of the cookie'
+      - id: flags
+        type: u1
+  sym_annotation:
+    seq:
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: num_strings
+        type: u2
+        doc: 'Count of zero terminated annotation strings'
+      - id: strings
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        repeat: expr
+        repeat-expr: num_strings
   sym_label32:
     params:
       - id: string_prefixed
@@ -1791,6 +1846,9 @@ types:
             dbi::symbol_type::s_pub32_st: sym_data32(true)
             dbi::symbol_type::s_thunk32: sym_thunk32(false)
             dbi::symbol_type::s_thunk32_st: sym_thunk32(true)
+            dbi::symbol_type::s_section: sym_section
+            dbi::symbol_type::s_annotation: sym_annotation
+            dbi::symbol_type::s_framecookie: sym_frame_cookie
             _: sym_unknown
     instances:
       module_index:
