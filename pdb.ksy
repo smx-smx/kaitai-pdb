@@ -1045,6 +1045,16 @@ types:
         type: str
         encoding: UTF-8
         terminator: 0
+  sym_function_list:
+    seq:
+      - id: count
+        type: u4
+        doc: 'Number of functions'
+      - id: functions
+        type: tpi_type_ref
+        repeat: expr
+        repeat-expr: count
+        doc: 'List of functions, dim == count'
   sym_unknown:
     seq:
       - id: data
@@ -1103,7 +1113,8 @@ types:
         if: end_body_pos >= 0
         size: 0
       # skip any remaining data (when in top-level)
-      - size-eos: true
+      - id: unparsed_data
+        size-eos: true
         if: nested == false
       # skip trailing padding (when nested)
       - size: padding_size
@@ -2046,6 +2057,8 @@ types:
             dbi::symbol_type::s_envblock: sym_envblock
             dbi::symbol_type::s_unamespace_st: sym_unamespace(true)
             dbi::symbol_type::s_unamespace: sym_unamespace(false)
+            dbi::symbol_type::s_callers: sym_function_list
+            dbi::symbol_type::s_callees: sym_function_list
             _: sym_unknown
     instances:
       module_index:
