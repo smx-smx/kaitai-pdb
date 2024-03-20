@@ -948,6 +948,11 @@ types:
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
         doc: 'offset in vfunctable if intro virtual'
+  lf_label:
+    seq:
+      - id: mode
+        type: u2
+        doc: 'addressing mode of label'
   lf_methodlist_16t:
     seq:
       - id: methods
@@ -994,6 +999,34 @@ types:
       - id: arglist
         type: tpi_type_ref
         doc: 'type index of argument list'
+  lf_vftable_names:
+    seq:
+      - id: names
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        repeat: eos
+  lf_vftable:
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'class/structure that owns the vftable'
+      - id: base_vftable
+        type: tpi_type_ref
+        doc: 'vftable from which this vftable is derived'
+      - id: offset_in_object_layout
+        type: u4
+        doc: 'offset of the vfptr to this table, relative to the start of the object layout.'
+      - id: len
+        type: u4
+        doc: 'length of the Names array below in bytes.'
+      - id: zzz_names_block
+        size: len
+        type: lf_vftable_names
+        doc: 'array of names. The first is the name of the vtable. The others are the names of the methods.'
+    instances:
+      names:
+        value: zzz_names_block.names
   lf_vtshape:
     seq:
       - id: count
@@ -1108,6 +1141,8 @@ types:
             tpi::leaf_type::lf_vtshape: lf_vtshape
             tpi::leaf_type::lf_methodlist: lf_methodlist
             tpi::leaf_type::lf_methodlist_16t: lf_methodlist_16t
+            tpi::leaf_type::lf_vftable: lf_vftable
+            tpi::leaf_type::lf_label: lf_label
             _: lf_unknown
       - id: invoke_end_body
         if: end_body_pos >= 0
