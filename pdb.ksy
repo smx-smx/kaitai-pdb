@@ -1703,7 +1703,7 @@ types:
         type: tpi_type_ref
         doc: 'Type index (containing enum if enumerate) or metadata token'
       - id: value
-        type: u2
+        type: cv_numeric_type
         doc: 'numeric leaf containing value'
       - id: name
         type: pdb_string(string_prefixed)
