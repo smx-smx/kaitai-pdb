@@ -1745,6 +1745,95 @@ types:
         terminator: 0
         repeat: expr
         repeat-expr: num_strings
+  sym_frame_proc_flags:
+    seq:
+      - id: has_alloca
+        type: b1
+        doc: 'function uses _alloca()'
+      - id: has_setjmp
+        type: b1
+        doc: 'function uses setjmp()'
+      - id: has_longjmp
+        type: b1
+        doc: 'function uses longjmp()'
+      - id: has_inline_asm
+        type: b1
+        doc: 'function uses inline asm'
+      - id: has_eh
+        type: b1
+        doc: 'function has EH states'
+      - id: inline_spec
+        type: b1
+        doc: 'function was speced as inline'
+      - id: has_seh
+        type: b1
+        doc: 'function has SEH'
+      - id: naked
+        type: b1
+        doc: 'function is __declspec(naked)'
+      - id: security_checks
+        type: b1
+        doc: 'function has buffer security check introduced by /GS.'
+      - id: async_eh
+        type: b1
+        doc: 'function compiled with /EHa'
+      - id: gs_no_stack_ordering
+        type: b1
+        doc: 'function has /GS buffer checks, but stack ordering couldn''t be done'
+      - id: was_inlined
+        type: b1
+        doc: 'function was inlined within another function'
+      - id: gs_check
+        type: b1
+        doc: 'function is __declspec(strict_gs_check)'
+      - id: safe_buffers
+        type: b1
+        doc: 'function is __declspec(safebuffers)'
+      - id: encoded_local_base_pointer
+        type: b2
+        doc: 'record function''s local pointer explicitly.'
+      - id: encoded_param_base_pointer
+        type: b2
+        doc: 'record function''s parameter pointer explicitly.'
+      - id: pogo_on
+        type: b1
+        doc: 'function was compiled with PGO/PGU'
+      - id: valid_counts
+        type: b1
+        doc: 'Do we have valid Pogo counts?'
+      - id: opt_speed
+        type: b1
+        doc: 'Did we optimize for speed?'
+      - id: guard_cf
+        type: b1
+        doc: 'function contains CFG checks (and no write checks)'
+      - id: guard_cfw
+        type: b1
+        doc: 'function contains CFW checks and/or instrumentation'
+      - id: pad
+        type: b9
+  sym_frame_proc:
+    seq:
+      - id: frame_size
+        type: u4
+        doc: 'count of bytes of total frame of procedure'
+      - id: pad_size
+        type: u4
+        doc: 'count of bytes of padding in the frame'
+      - id: pad_offset
+        type: u4
+        doc: 'offset (relative to frame poniter) to where padding starts'
+      - id: save_regs_size
+        type: u4
+        doc: 'count of bytes of callee save registers'
+      - id: exception_handler_offset
+        type: u4
+        doc: 'offset of exception handler'
+      - id: exception_handler_section
+        type: u2
+        doc: 'section id of exception handler'
+      - id: flags
+        type: sym_frame_proc_flags
   sym_label32:
     params:
       - id: string_prefixed
@@ -1935,6 +2024,7 @@ types:
             dbi::symbol_type::s_section: sym_section
             dbi::symbol_type::s_annotation: sym_annotation
             dbi::symbol_type::s_framecookie: sym_frame_cookie
+            dbi::symbol_type::s_frameproc: sym_frame_proc
             dbi::symbol_type::s_unamespace_st: sym_unamespace(true)
             dbi::symbol_type::s_unamespace: sym_unamespace(false)
             _: sym_unknown
