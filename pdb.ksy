@@ -147,21 +147,22 @@ types:
     doc: 'SI_PERSIST'
     params:
       - id: stream_number
-        type: u4
+        type: s4
     seq:
       - id: stream_size
-        type: u4
+        type: s4
     instances:
       zzz_num_directory_pages:
         type: get_num_pages(stream_size)
       num_directory_pages:
-        value: zzz_num_directory_pages.num_pages
+        value: '(stream_size < 0) ? 0 : zzz_num_directory_pages.num_pages'
   pdb_stream_data:
     params:
       - id: stream_size
-        type: u4
+        type: s4
     seq:
       - id: data
+        if: stream_size > 0
         size: stream_size
   pdb_stream_pagelist:
     params:
