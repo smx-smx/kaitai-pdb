@@ -36,6 +36,7 @@ if($doTypes){
 	print("... loading types ... ");
 	$types = $pdb->types();
 	print("DONE!\n");
+	$n_types = count($types);
 	foreach($types as $i => $t){
 		$d = $t->data();
 		$ti = $t->ti();
@@ -44,10 +45,10 @@ if($doTypes){
 	
 		$klass = get_class($body);
 		$isUnknown = $klass === "Pdb\LfUnknown";
+		$typeName = $lfTypes[$type];
 		if($isUnknown){
 			printf("\n[type] i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
 			$body_data = $body->data();
-			$typeName = $lfTypes[$d->type()];
 			if(!isset($seen[$typeName])){
 				print("{$typeName}\n");
 				$seen[$typeName] = true;
@@ -55,18 +56,20 @@ if($doTypes){
 			}
 			//print_r(get_methods($t));
 		} else if($debug){
-			print("\33[2K\r");
-			print("[type] {$i}: {$klass}");
+			//print("\33[2K\r");
+			print("\r[type] {$i}/{$n_types}: {$typeName}\x1B[K");
 		}
 		//print(get_class($d) . "\n");
 		//print_r(get_methods($d));
 	}
+	print("\n");
 }
 
 if($doSyms){
 	print("... loading symbols ... ");
 	$mods = $pdb->dbi()->modules()->modules();
 	print("DONE!\n");
+	$n_mods = count($mods);
 	foreach($mods as $i => $m){
 		$md = $m->moduleData();
 		if($md === null) continue;
@@ -74,6 +77,7 @@ if($doSyms){
 		if($sd === null) continue;
 		
 		$syms = $sd->symbols();
+		$n_syms = count($syms);
 		foreach($syms as $j => $s){
 			$sd = $s->data();
 			$type = $sd->type();
@@ -83,18 +87,19 @@ if($doSyms){
 
 			$klass = get_class($body);
 			$isUnknown = $klass === "Pdb\SymUnknown";
+			$symTypeName = $symTypes[$type];
 			if($isUnknown){
 				$body_data = $body->data();
-				$symTypeName = $symTypes[$type];
 				if(!isset($seen[$symTypeName])){
 					print("{$symTypeName} ({$length})\n");
 					$seen[$symTypeName] = true;
 					print(bin2hex($body_data) . "\n");
 				}
 			} else if($debug){
-				print("\33[2K\r");
-				printf("[sym] mod: %d, sym: %d, %s\n", $i, $j, $symTypeName);
+				//print("\33[2K\r");
+				print("\r[sym] mod: {$i}/{$n_mods}, sym: {$j}/{$n_syms}, {$symTypeName}\x1B[K");
 			}
 		}
 	}
+	print("\n");
 }

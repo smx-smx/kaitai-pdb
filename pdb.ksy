@@ -1088,6 +1088,9 @@ types:
         repeat: expr
         repeat-expr: count
         doc: 'List of functions, dim == count'
+  sym_skip:
+    seq:
+      - size-eos: true
   sym_unknown:
     seq:
       - id: data
@@ -1938,6 +1941,63 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_block32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+      - id: length
+        type: u4
+        doc: 'Block length'
+      - id: offset
+        type: u4
+        doc: 'Offset in code segment'
+      - id: segment
+        type: u2
+        doc: 'segment of label'
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_regrel32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: offset
+        type: u4
+        doc: 'offset of symbol'
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index or metadata token'
+      - id: register
+        type: u2
+        doc: 'register index for symbol'
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'Length-prefixed name'
+  sym_thread32:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'type index'
+      - id: offset
+        type: u4
+        doc: 'offset into thread storage'
+      - id: segment
+        type: u2
+        doc: 'segment of thread storage'
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'length prefixed name'
   sym_proc32:
     params:
       - id: string_prefixed
@@ -2022,6 +2082,259 @@ types:
       # FIXME
       - id: variant
         size-eos: true
+  sym_arm_switch_table:
+    seq:
+      - id: offset_base
+        type: u4
+        doc: 'Section-relative offset to the base for switch offsets'
+      - id: base_section
+        type: u2
+        doc: 'Section index of the base for switch offsets'
+      - id: switch_type
+        type: u2
+        doc: 'type of each entry'
+      - id: offset_branch
+        type: u4
+        doc: 'Section-relative offset to the table branch instruction'
+      - id: offset_table
+        type: u4
+        doc: 'Section-relative offset to the start of the table'
+      - id: branch_section
+        type: u2
+        doc: 'Section index of the table branch instruction'
+      - id: table_section
+        type: u2
+        doc: 'Section index of the table'
+      - id: num_entries 
+        type: u4
+        doc: 'number of switch table entries'
+  cv_local_var_flags:
+    seq:
+      - id: is_param
+        type: b1
+        doc: 'variable is a parameter'
+      - id: addr_taken
+        type: b1
+        doc: 'address is taken'
+      - id: comp_genx
+        type: b1
+        doc: 'variable is compiler generated'
+      - id: is_aggregate
+        type: b1
+        doc: 'the symbol is splitted in temporaries, which are treated by compiler as independent entities'
+      - id: is_aggregated
+        type: b1
+        doc: 'Counterpart of fIsAggregate - tells that it is a part of a fIsAggregate symbol'
+      - id: is_aliased
+        type: b1
+        doc: 'variable has multiple simultaneous lifetimes'
+      - id: is_alias
+        type: b1
+        doc: 'represents one of the multiple simultaneous lifetimes'
+      - id: is_return_value
+        type: b1
+        doc: 'represents a function return value'
+      - id: is_optimized_out
+        type: b1
+        doc: 'variable has no lifetimes'
+      - id: is_enregistered_global
+        type: b1
+        doc: 'variable is an enregistered global'
+      - id: is_enregistered_static
+        type: b1
+        doc: 'variable is an enregistered static'
+      - id: unused
+        type: b5
+        doc: 'must be zero'
+  sym_local:
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'type index'
+      - id: flags
+        type: cv_local_var_flags
+        doc: 'local var flags'
+  sym_build_info:
+    # FIXME: CV_ItemID (DEBUG_S_CROSSSCOPEIMPORTS)
+    seq:
+      - id: id
+        type: u4
+        doc: 'CV_ItemId of Build Info.'
+  sym_heap_alloc_site:
+    seq:
+      - id: off
+        type: u4
+        doc: 'offset of call site'
+      - id: section
+        type: u2
+        doc: 'section index of call site'
+      - id: instruction_size
+        type: u2
+        doc: 'length of heap allocation call instruction'
+      - id: type
+        type: tpi_type_ref
+        doc: 'type index describing function signature'
+  sym_callsite_info:
+    seq:
+      - id: offset
+        type: u4
+        doc: 'offset of call site'
+      - id: section
+        type: u2
+        doc: 'section index of call site'
+      - size: 2
+        doc: 'alignment padding field, must be zero'
+      - id: type
+        type: tpi_type_ref
+        doc: 'type index describing function signature'
+  sym_file_static:
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'type index'
+      # TODO: this refers to a string. 
+      # the offset is relative to the symbol beginning
+      # in the parent module stream
+      - id: mod_offset
+        type: u4
+        doc: 'index of mod filename in stringtable'
+      - id: flags
+        type: cv_local_var_flags
+        doc: 'local var flags'
+      - id: name
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        doc: 'Name of this symbol, a null terminated array of UTF8 characters'
+  sym_inline_site:
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the inliner'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+      - id: inlinee
+        type: u4
+        doc: 'CV_ItemId of inlinee' #FIXME
+      - id: binary_annotations #FIXME
+        size-eos: true
+        doc: 'an array of compressed binary annotations.' 
+  cv_range_attr:
+    seq:
+      - id: maybe
+        type: b1
+        doc: 'May have no user name on one of control flow path.'
+      - type: b15
+        doc: 'Padding for future use.'
+  cv_lvar_addr_range:
+    doc: 'defines a range of addresses'
+    seq:
+      - id: offset_start
+        type: u4
+      - id: section_start_index
+        type: u2
+      - id: range_length
+        type: u2 # in bytes
+  cv_lvar_addr_gap:
+    doc: 'Represents the holes in overall address range, all address is pre-bbt. it is for compress and reduce the amount of relocations need.'
+    seq:
+      - id: gap_start_offset
+        type: u2
+        doc: 'relative offset from the beginning of the live range.'
+      - id: gap_length
+        type: u2
+        doc: 'length of this gap.'
+  sym_defrange_register_rel:
+    seq:
+      - id: base_register
+        type: u2
+        doc: 'Register to hold the base pointer of the symbol'
+      - id: spilled_udt_member
+        type: b1
+        doc: 'Spilled member for s.i.'
+      - type: b3
+        doc: 'Padding for future use.'
+      - id: offset_member
+        type: b12
+        doc: 'Offset in parent variable.'
+      - id: base_pointer_offset
+        type: u4
+        doc: 'offset to register'
+      - id: range
+        type: cv_lvar_addr_range
+        doc: 'Range of addresses where this program is valid'
+      - id: gaps
+        type: cv_lvar_addr_gap
+        repeat: eos
+        doc: 'The value is not available in following gaps.'
+  sym_defrange_register:
+    seq:
+      - id: reg
+        type: u2
+        doc: 'Register to hold the value of the symbol'
+      - id: attr
+        type: cv_range_attr
+        doc: 'Attribute of the register range.'
+      - id: range
+        type: cv_lvar_addr_range
+        doc: 'Range of addresses where this program is valid'
+      - id: gaps
+        type: cv_lvar_addr_gap
+        repeat: eos
+  sym_defrange_framepointer_rel:
+    params:
+      - id: full_scope
+        type: bool
+    seq:
+      - id: frame_pointer_offset
+        type: u4
+        doc: 'offset to frame pointer'
+      - id: range
+        if: full_scope == false
+        type: cv_lvar_addr_range
+        doc: 'Range of addresses where this program is valid'
+      - id: gaps
+        if: full_scope == false
+        repeat: eos
+        type: cv_lvar_addr_gap
+        doc: 'The value is not available in following gaps. '
+  sym_defrange_subfield_register:
+    seq:
+      - id: register
+        type: u2
+        doc: 'Register to hold the value of the symbol'
+      - id: attr
+        type: cv_range_attr
+        doc: 'Attribute of the register range.'
+      - id: parent_offset
+        type: b12
+        doc: 'Offset in parent variable.'
+      - type: b20
+        doc: 'Padding for future use.'
+      - id: range
+        type: cv_lvar_addr_range
+        doc: 'Range of addresses where this program is valid'
+      - id: gaps
+        repeat: eos
+        type: cv_lvar_addr_gap
+        doc: 'The value is not available in following gaps. '
+  sym_coff_group:
+    seq:
+      - id: size
+        type: u4
+        doc: 'cb'
+      - id: characteristics
+        type: u4
+      - id: symbol_offset
+        type: u4
+        doc: 'Symbol offset'
+      - id: symbol_segment
+        type: u2
+        doc: 'Symbol segment'
+      - id: name
+        type: pdb_string(false)
+        doc: 'name'
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -2094,6 +2407,29 @@ types:
             dbi::symbol_type::s_unamespace: sym_unamespace(false)
             dbi::symbol_type::s_callers: sym_function_list
             dbi::symbol_type::s_callees: sym_function_list
+            dbi::symbol_type::s_inlinees: sym_function_list
+            dbi::symbol_type::s_skip: sym_skip
+            dbi::symbol_type::s_armswitchtable: sym_arm_switch_table
+            dbi::symbol_type::s_filestatic: sym_file_static
+            dbi::symbol_type::s_buildinfo: sym_build_info
+            dbi::symbol_type::s_heapallocsite: sym_heap_alloc_site
+            dbi::symbol_type::s_block32_st: sym_block32(true)
+            dbi::symbol_type::s_block32: sym_block32(false)
+            dbi::symbol_type::s_lthread32_st: sym_thread32(true)
+            dbi::symbol_type::s_lthread32: sym_thread32(false)
+            dbi::symbol_type::s_gthread32_st: sym_thread32(true)
+            dbi::symbol_type::s_gthread32: sym_thread32(false)
+            dbi::symbol_type::s_callsiteinfo: sym_callsite_info
+            dbi::symbol_type::s_local: sym_local
+            dbi::symbol_type::s_regrel32: sym_regrel32(false)
+            dbi::symbol_type::s_regrel32_st: sym_regrel32(true)
+            dbi::symbol_type::s_inlinesite: sym_inline_site
+            dbi::symbol_type::s_coffgroup: sym_coff_group
+            dbi::symbol_type::s_defrange_register: sym_defrange_register
+            dbi::symbol_type::s_defrange_register_rel: sym_defrange_register_rel
+            dbi::symbol_type::s_defrange_subfield_register: sym_defrange_subfield_register
+            dbi::symbol_type::s_defrange_framepointer_rel: sym_defrange_framepointer_rel(false)
+            dbi::symbol_type::s_defrange_framepointer_rel_full_scope: sym_defrange_framepointer_rel(true)
             _: sym_unknown
     instances:
       module_index:
