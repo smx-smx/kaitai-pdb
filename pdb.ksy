@@ -1928,6 +1928,24 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_envblock_flags:
+    seq:
+      - id: rev
+        type: b1
+        doc: 'reserved'
+      - id: pad
+        type: b7
+        doc: 'reserved, must be 0'
+  sym_envblock:
+    seq:
+      - id: flags
+        type: sym_envblock_flags
+      - id: strings
+        type: str
+        encoding: UTF-8
+        repeat: eos
+        terminator: 0
+        doc: 'Sequence of zero-terminated strings'
   sym_thunk32:
     params:
       - id: string_prefixed
@@ -2025,6 +2043,7 @@ types:
             dbi::symbol_type::s_annotation: sym_annotation
             dbi::symbol_type::s_framecookie: sym_frame_cookie
             dbi::symbol_type::s_frameproc: sym_frame_proc
+            dbi::symbol_type::s_envblock: sym_envblock
             dbi::symbol_type::s_unamespace_st: sym_unamespace(true)
             dbi::symbol_type::s_unamespace: sym_unamespace(false)
             _: sym_unknown
