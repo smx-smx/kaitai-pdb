@@ -1708,6 +1708,14 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_unamespace:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'name'
   sym_frame_cookie:
     seq:
       - id: offset
@@ -1927,6 +1935,8 @@ types:
             dbi::symbol_type::s_section: sym_section
             dbi::symbol_type::s_annotation: sym_annotation
             dbi::symbol_type::s_framecookie: sym_frame_cookie
+            dbi::symbol_type::s_unamespace_st: sym_unamespace(true)
+            dbi::symbol_type::s_unamespace: sym_unamespace(false)
             _: sym_unknown
     instances:
       module_index:
