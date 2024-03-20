@@ -2447,6 +2447,19 @@ types:
       - id: items
         repeat: eos
         type: fpo_data
+  # contents of stream #1
+  pdb_stream:
+    seq:
+      - id: implementation_version
+        type: u4
+        enum: pdb_implementation_version
+        doc: 'implementation version number'
+      - id: sig
+        type: u4
+        doc: 'unique (across PDB instances) signature'
+      - id: age
+        type: u4
+        doc: 'no. of times this instance has been updated'
   debug_data:
     seq:
       - id: fpo_stream
@@ -2850,6 +2863,8 @@ instances:
       ? pdb_ds.stream_table.num_streams
       : pdb_type == pdb_type::small 
       ? pdb_jg.stream_table.num_streams : 0'
+  zzz_pdb_data:
+    type: get_stream_data(default_stream::pdb.to_i)
   zzz_tpi_data:
     type: get_stream_data(default_stream::tpi.to_i)
   zzz_dbi_data:
@@ -2872,6 +2887,10 @@ instances:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.types
       : tpi.types.types'
+  pdb:
+    size: 0
+    type: pdb_stream
+    process: cat(zzz_pdb_data.value)
   tpi:
     size: 0
     type: tpi
@@ -2902,4 +2921,15 @@ enums:
     20001102: v70
     20030901: v80
     20091201: v110
+  pdb_implementation_version:
+    19941610: vc2
+    19950623: vc4
+    19950814: vc41
+    19960307: vc50
+    19970604: vc98
+    20000404: vc70
+    19990604: vc70_deprecated
+    20030901: vc80
+    20091201: vc110
+    20140508: vc140
   
