@@ -20,53 +20,80 @@ if($argc < 2){
 }
 
 /** @var \Pdb */
+print("... parsing ... ");
 $pdb = Pdb::fromFile($argv[1]);
+print("DONE!\n");
+
+$debug = getenv('DEBUG') === '1';
+
+$flags = $argv[2] ?? '';
+$doSyms = empty($flags) || str_contains($flags, "+syms");
+$doTypes = empty($flags) || str_contains($flags, "+types");
 
 $seen = [];
 
-$types = $pdb->types();
-foreach($types as $i => $t){
-	$d = $t->data();
-	$ti = $t->ti();
-	$type = $d->type();
-	$body = $d->body();
-	if(get_class($body) === "Pdb\LfUnknown"){
-		printf("[type] i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
-		$body_data = $body->data();
-		$typeName = $lfTypes[$d->type()];
-		if(!isset($seen[$typeName])){
-			print("{$typeName}\n");
-			$seen[$typeName] = true;
-			print(bin2hex($body_data) . "\n");
+if($doTypes){
+	print("... loading types ... ");
+	$types = $pdb->types();
+	print("DONE!\n");
+	foreach($types as $i => $t){
+		$d = $t->data();
+		$ti = $t->ti();
+		$type = $d->type();
+		$body = $d->body();
+	
+		$klass = get_class($body);
+		$isUnknown = $klass === "Pdb\LfUnknown";
+		if($isUnknown){
+			printf("\n[type] i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
+			$body_data = $body->data();
+			$typeName = $lfTypes[$d->type()];
+			if(!isset($seen[$typeName])){
+				print("{$typeName}\n");
+				$seen[$typeName] = true;
+				print(bin2hex($body_data) . "\n");
+			}
+			//print_r(get_methods($t));
+		} else if($debug){
+			print("\33[2K\r");
+			print("[type] {$i}: {$klass}");
 		}
-		//print_r(get_methods($t));
+		//print(get_class($d) . "\n");
+		//print_r(get_methods($d));
 	}
-	//print(get_class($d) . "\n");
-	//print_r(get_methods($d));
 }
 
-$mods = $pdb->dbi()->modules()->modules();
-foreach($mods as $i => $m){
-	$md = $m->moduleData();
-	if($md === null) continue;
-	$sd = $md->symbols();
-	if($sd === null) continue;
-	
-	$syms = $sd->symbols();
-	foreach($syms as $j => $s){
-		$sd = $s->data();
-		$type = $sd->type();
-		$body = $sd->body();
-		$length = $sd->length();
-		if($body === null) continue;
-		if(get_class($body) === "Pdb\SymUnknown"){
-			$body_data = $body->data();
-			$symTypeName = $symTypes[$type];
-			//printf("[sym] mod: %d, sym: %d, %s\n", $i, $j, $symTypeName);
-			if(!isset($seen[$symTypeName])){
-				print("{$symTypeName} ({$length})\n");
-				$seen[$symTypeName] = true;
-				print(bin2hex($body_data) . "\n");
+if($doSyms){
+	print("... loading symbols ... ");
+	$mods = $pdb->dbi()->modules()->modules();
+	print("DONE!\n");
+	foreach($mods as $i => $m){
+		$md = $m->moduleData();
+		if($md === null) continue;
+		$sd = $md->symbols();
+		if($sd === null) continue;
+		
+		$syms = $sd->symbols();
+		foreach($syms as $j => $s){
+			$sd = $s->data();
+			$type = $sd->type();
+			$body = $sd->body();
+			$length = $sd->length();
+			if($body === null) continue;
+
+			$klass = get_class($body);
+			$isUnknown = $klass === "Pdb\SymUnknown";
+			if($isUnknown){
+				$body_data = $body->data();
+				$symTypeName = $symTypes[$type];
+				if(!isset($seen[$symTypeName])){
+					print("{$symTypeName} ({$length})\n");
+					$seen[$symTypeName] = true;
+					print(bin2hex($body_data) . "\n");
+				}
+			} else if($debug){
+				print("\33[2K\r");
+				printf("[sym] mod: %d, sym: %d, %s\n", $i, $j, $symTypeName);
 			}
 		}
 	}
