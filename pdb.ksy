@@ -1575,6 +1575,82 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_compile3_flags:
+    seq:
+      - id: language
+        type: u1
+        doc: 'language index'
+      - id: ec
+        type: b1
+        doc: 'compiled for E/C'
+      - id: no_dbg_info
+        type: b1
+        doc: 'not compiled with debug info'
+      - id: ltcg
+        type: b1
+        doc: 'compiled with LTCG'
+      - id: no_data_align
+        type: b1
+        doc: 'compiled with -Bzalign'
+      - id: managed_present
+        type: b1
+        doc: 'managed code/data present'
+      - id: security_checks
+        type: b1
+        doc: 'compiled with /GS'
+      - id: hot_patch
+        type: b1
+        doc: 'compiled with /hotpatch'
+      - id: cvt_cil
+        type: b1
+        doc: 'converted with CVTCIL'
+      - id: msil_module
+        type: b1
+        doc: 'MSIL netmodule'
+      - id: sdl
+        type: b1
+        doc: 'compiled with /sdl'
+      - id: pgo
+        type: b1
+        doc: 'compiled with /ltcg:pgo or pgu'
+      - id: exp
+        type: b1
+        doc: '.exp module'
+      - type: b12
+  sym_compile3:
+    seq:
+      - id: flags
+        type: sym_compile3_flags
+      - id: machine
+        type: u2
+        doc: 'target processor'
+      - id: ver_fe_major
+        type: u2
+        doc: 'front end major version #'
+      - id: ver_fe_minor
+        type: u2
+        doc: 'front end minor version #'
+      - id: ver_fe_build
+        type: u2
+        doc: 'front end build version #'
+      - id: ver_fe_qfe
+        type: u2
+        doc: 'front end QFE version #'
+      - id: ver_major
+        type: u2
+        doc: 'back end major version #'
+      - id: ver_minor
+        type: u2
+        doc: 'back end minor version #'
+      - id: ver_build
+        type: u2
+        doc: 'back end build version #'
+      - id: ver_qfe
+        type: u2
+        doc: 'back end QFE version #'
+      - id: ver_sz
+        type: pdb_string(false)
+        doc: 'Zero terminated compiler version string'
   sym_compile:
     seq:
       - id: machine
@@ -1824,6 +1900,7 @@ types:
             dbi::symbol_type::s_objname: sym_objname(false)
             dbi::symbol_type::s_objname_st: sym_objname(true)
             dbi::symbol_type::s_compile: sym_compile
+            dbi::symbol_type::s_compile3: sym_compile3
             dbi::symbol_type::s_constant: sym_constant(false)
             dbi::symbol_type::s_constant_st: sym_constant(true)
             dbi::symbol_type::s_udt: sym_udt(false)
