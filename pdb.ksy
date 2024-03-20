@@ -1624,6 +1624,40 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+  sym_compile2_flags:
+    seq:
+      - id: language
+        type: u1
+        doc: 'language index'
+      - id: ec
+        type: b1
+        doc: 'compiled for E/C'
+      - id: no_dbg_info
+        type: b1
+        doc: 'not compiled with debug info'
+      - id: ltcg
+        type: b1
+        doc: 'compiled with LTCG'
+      - id: no_data_align
+        type: b1
+        doc: 'compiled with -Bzalign'
+      - id: managed_present
+        type: b1
+        doc: 'managed code/data present'
+      - id: security_checks
+        type: b1
+        doc: 'compiled with /GS'
+      - id: hot_patch
+        type: b1
+        doc: 'compiled with /hotpatch'
+      - id: cvt_cil
+        type: b1
+        doc: 'converted with CVTCIL'
+      - id: msil_module
+        type: b1
+        doc: 'MSIL netmodule'
+      - type: b15
+        doc: 'reserved, must be 0'
   sym_compile3_flags:
     seq:
       - id: language
@@ -1697,9 +1731,48 @@ types:
       - id: ver_qfe
         type: u2
         doc: 'back end QFE version #'
-      - id: ver_sz
+      - id: version_string
         type: pdb_string(false)
         doc: 'Zero terminated compiler version string'
+  sym_compile2:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: flags
+        type: sym_compile2_flags
+        doc: 'flags'
+      - id: machine
+        type: u2
+        doc: 'target processor'
+      - id: ver_fe_major
+        type: u2
+        doc: 'front end major version #'
+      - id: ver_fe_minor
+        type: u2
+        doc: 'front end minor version #'
+      - id: ver_fe_build
+        type: u2
+        doc: 'front end build version #'
+      - id: ver_major
+        type: u2
+        doc: 'back end major version #'
+      - id: ver_minor
+        type: u2
+        doc: 'back end minor version #'
+      - id: ver_build
+        type: u2
+        doc: 'back end build version #'
+      - id: version_string
+        type: pdb_string(string_prefixed)
+        doc: 'Length-prefixed compiler version string'
+      - id: strings_block
+        type: str
+        encoding: UTF-8
+        terminator: 0
+        repeat: until
+        repeat-until: _ == ""
+        doc: 'an optional block of zero terminated strings, terminated with a double zero.'
   sym_compile:
     seq:
       - id: machine
@@ -1729,7 +1802,7 @@ types:
       - id: pad
         type: b4
         doc: 'reserved'
-      - id: ver
+      - id: version_string
         type: pdb_string(true)
         doc: 'Length-prefixed compiler version string'
   sym_constant:
@@ -2335,6 +2408,55 @@ types:
       - id: name
         type: pdb_string(false)
         doc: 'name'
+  sym_export:
+    seq:
+      - id: ordinal
+        type: u2
+      - id: is_constant
+        type: b1
+        doc: 'CONSTANT'
+      - id: is_data
+        type: b1
+        doc: 'DATA'
+      - id: is_private
+        type: b1
+        doc: 'PRIVATE'
+      - id: is_noname
+        type: b1
+        doc: 'NONAME'
+      - id: is_ordinal
+        type: b1
+        doc: 'Ordinal was explicitly assigned'
+      - id: is_forwarder
+        type: b1
+        doc: 'This is a forwarder'
+      - type: b10
+        doc: 'Reserved. Must be zero.'
+      - id: name
+        doc: 'name of'
+        type: str
+        encoding: UTF-8
+        terminator: 0
+  sym_trampoline:
+    seq:
+      - id: trampoline_type
+        type: u2
+        doc: 'trampoline sym subtype'
+      - id: thunk_size
+        type: u2
+        doc: 'size of the thunk'
+      - id: thunk_offset
+        type: u4
+        doc: 'offset of the thunk'
+      - id: thunk_target_offset
+        type: u4
+        doc: 'offset of the target of the thunk'
+      - id: thunk_section_index
+        type: u2
+        doc: 'section index of the thunk'
+      - id: thunk_target_section_index
+        type: u2
+        doc: 'section index of the target of the thunk'
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -2374,6 +2496,8 @@ types:
             dbi::symbol_type::s_objname: sym_objname(false)
             dbi::symbol_type::s_objname_st: sym_objname(true)
             dbi::symbol_type::s_compile: sym_compile
+            dbi::symbol_type::s_compile2: sym_compile2(false)
+            dbi::symbol_type::s_compile2_st: sym_compile2(true)
             dbi::symbol_type::s_compile3: sym_compile3
             dbi::symbol_type::s_constant: sym_constant(false)
             dbi::symbol_type::s_constant_st: sym_constant(true)
@@ -2430,6 +2554,8 @@ types:
             dbi::symbol_type::s_defrange_subfield_register: sym_defrange_subfield_register
             dbi::symbol_type::s_defrange_framepointer_rel: sym_defrange_framepointer_rel(false)
             dbi::symbol_type::s_defrange_framepointer_rel_full_scope: sym_defrange_framepointer_rel(true)
+            dbi::symbol_type::s_export: sym_export
+            dbi::symbol_type::s_trampoline: sym_trampoline
             _: sym_unknown
     instances:
       module_index:

@@ -50,7 +50,7 @@ if($doTypes){
 			printf("\n[type] i: %d, ti: %d, 0x%x %s\n", $i, $ti, $ti, $lfTypes[$type]);
 			$body_data = $body->data();
 			if(!isset($seen[$typeName])){
-				print("{$typeName}\n");
+				print("\n{$typeName}\n");
 				$seen[$typeName] = true;
 				print(bin2hex($body_data) . "\n");
 			}
@@ -91,7 +91,7 @@ if($doSyms){
 			if($isUnknown){
 				$body_data = $body->data();
 				if(!isset($seen[$symTypeName])){
-					print("{$symTypeName} ({$length})\n");
+					print("\n{$symTypeName} ({$length})\n");
 					$seen[$symTypeName] = true;
 					print(bin2hex($body_data) . "\n");
 				}
