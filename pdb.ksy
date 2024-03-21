@@ -1852,6 +1852,32 @@ types:
         doc: 'Type of the cookie'
       - id: flags
         type: u1
+  cv_lvar_attr:
+    seq:
+      - id: offset
+        type: u4
+        doc: 'first code address where var is live'
+      - id: segment
+        type: u2
+      - id: flags
+        type: cv_local_var_flags
+        doc: 'local var flags'
+  sym_attr_slot:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: slot_index
+        type: u4
+        doc: 'slot index'
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index or Metadata token'
+      - id: attr
+        type: cv_lvar_attr
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'Length-prefixed name'
   sym_annotation:
     seq:
       - id: offset
@@ -2071,6 +2097,45 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'length prefixed name'
+  sym_manproc:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+      - id: next
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to next symbol'
+      - id: length
+        type: u4
+        doc: 'Proc length'
+      - id: dbg_start
+        type: u4
+        doc: 'Debug start offset'
+      - id: dbg_end
+        type: u4
+        doc: 'Debug end offset'
+      - id: token
+        type: u4
+        doc: 'COM+ metadata token for method'
+      - id: offset
+        type: u4
+      - id: segment
+        type: u2
+      - id: flags
+        type: cv_proc_flags
+        doc: 'Proc flags'
+      - id: return_register
+        type: u2
+        doc: 'Register return value is in (may not be used for all archs)'
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'optional name field'
   sym_proc32:
     params:
       - id: string_prefixed
@@ -2457,6 +2522,17 @@ types:
       - id: thunk_target_section_index
         type: u2
         doc: 'section index of the target of the thunk'
+  sym_oem:
+    seq:
+      - id: oem_id
+        size: 16
+        doc: 'an oem ID (GUID)'
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+      - id: user_data
+        size-eos: true
+        doc: 'user data, force 4-byte alignment'
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -2556,6 +2632,13 @@ types:
             dbi::symbol_type::s_defrange_framepointer_rel_full_scope: sym_defrange_framepointer_rel(true)
             dbi::symbol_type::s_export: sym_export
             dbi::symbol_type::s_trampoline: sym_trampoline
+            dbi::symbol_type::s_oem: sym_oem
+            dbi::symbol_type::s_gmanproc: sym_manproc(false)
+            dbi::symbol_type::s_gmanproc_st: sym_manproc(true)
+            dbi::symbol_type::s_lmanproc: sym_manproc(false)
+            dbi::symbol_type::s_lmanproc_st: sym_manproc(true)
+            dbi::symbol_type::s_manslot: sym_attr_slot(false)
+            dbi::symbol_type::s_manslot_st: sym_attr_slot(true)
             _: sym_unknown
     instances:
       module_index:
