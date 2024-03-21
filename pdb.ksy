@@ -180,6 +180,8 @@ types:
         type: pdb_stream_data(stream_size)
       zzz_stream_size:
         type: get_stream_size(stream_number)
+      has_data:
+        value: stream_size > 0
       num_directory_pages:
         value: '_root.pdb_type == pdb_type::big
           ? _parent.stream_sizes_ds[stream_number].num_directory_pages
@@ -200,6 +202,10 @@ types:
       - id: stream_number
         type: u4
     instances:
+      has_data:
+        value: '_root.pdb_type == pdb_type::big
+          ? _root.pdb_ds.stream_table.streams[stream_number].has_data
+          : _root.pdb_jg.stream_table.streams[stream_number].has_data'
       value:
         value: '_root.pdb_type == pdb_type::big
           ? _root.pdb_ds.stream_table.streams[stream_number].data
@@ -3528,6 +3534,7 @@ instances:
   dbi:
     size: 0
     type: dbi
+    if: zzz_dbi_data.has_data
     process: cat(zzz_dbi_data.value)
 enums:
   # pseudo-enum to keep track of the PDB type

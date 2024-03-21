@@ -66,40 +66,44 @@ if($doTypes){
 }
 
 if($doSyms){
-	print("... loading symbols ... ");
-	$mods = $pdb->dbi()->modules()->modules();
-	print("DONE!\n");
-	$n_mods = count($mods);
-	foreach($mods as $i => $m){
-		$md = $m->moduleData();
-		if($md === null) continue;
-		$sd = $md->symbols();
-		if($sd === null) continue;
-		
-		$syms = $sd->symbols();
-		$n_syms = count($syms);
-		foreach($syms as $j => $s){
-			$sd = $s->data();
-			$type = $sd->type();
-			$body = $sd->body();
-			$length = $sd->length();
-			if($body === null) continue;
+	do {
+		print("... loading symbols ... ");
+		$dbi = $pdb->dbi();
+		if($dbi === null) break;
+		$mods = $dbi->modules()->modules();
+		print("DONE!\n");
+		$n_mods = count($mods);
+		foreach($mods as $i => $m){
+			$md = $m->moduleData();
+			if($md === null) continue;
+			$sd = $md->symbols();
+			if($sd === null) continue;
 
-			$klass = get_class($body);
-			$isUnknown = $klass === "Pdb\SymUnknown";
-			$symTypeName = $symTypes[$type];
-			if($isUnknown){
-				$body_data = $body->data();
-				if(!isset($seen[$symTypeName])){
-					print("\n{$symTypeName} ({$length})\n");
-					$seen[$symTypeName] = true;
-					print(bin2hex($body_data) . "\n");
+			$syms = $sd->symbols();
+			$n_syms = count($syms);
+			foreach($syms as $j => $s){
+				$sd = $s->data();
+				$type = $sd->type();
+				$body = $sd->body();
+				$length = $sd->length();
+				if($body === null) continue;
+
+				$klass = get_class($body);
+				$isUnknown = $klass === "Pdb\SymUnknown";
+				$symTypeName = $symTypes[$type];
+				if($isUnknown){
+					$body_data = $body->data();
+					if(!isset($seen[$symTypeName])){
+						print("\n{$symTypeName} ({$length})\n");
+						$seen[$symTypeName] = true;
+						print(bin2hex($body_data) . "\n");
+					}
+				} else if($debug){
+					//print("\33[2K\r");
+					print("\r[sym] mod: {$i}/{$n_mods}, sym: {$j}/{$n_syms}, {$symTypeName}\x1B[K");
 				}
-			} else if($debug){
-				//print("\33[2K\r");
-				print("\r[sym] mod: {$i}/{$n_mods}, sym: {$j}/{$n_syms}, {$symTypeName}\x1B[K");
 			}
 		}
-	}
+	} while(false);
 	print("\n");
 }
