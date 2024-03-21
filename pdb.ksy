@@ -2533,6 +2533,42 @@ types:
       - id: user_data
         size-eos: true
         doc: 'user data, force 4-byte alignment'
+  cv_sepcode_flags:
+    seq:
+      - id: is_lexical_scope
+        type: b1
+        doc: 'S_SEPCODE doubles as lexical scope'
+      - id: returns_to_parent
+        type: b1
+        doc: 'code frag returns to parent'
+      - id: pad
+        type: b30
+        doc: 'must be zero'
+  sym_sepcode:
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end' 
+      - id: length
+        type: u4
+        doc: 'count of bytes of this block'
+      - id: scf
+        type: cv_sepcode_flags
+        doc: 'flags'
+      - id: offset
+        type: u4
+        doc: 'sect:off of the separated code'
+      - id: parent_offset
+        type: u4
+        doc: 'sectParent:offParent of the enclosing scope'
+      - id: section
+        type: u2
+        doc: '(proc, block, or sepcode)'
+      - id: parent_section
+        type: u2
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -2639,6 +2675,7 @@ types:
             dbi::symbol_type::s_lmanproc_st: sym_manproc(true)
             dbi::symbol_type::s_manslot: sym_attr_slot(false)
             dbi::symbol_type::s_manslot_st: sym_attr_slot(true)
+            dbi::symbol_type::s_sepcode: sym_sepcode
             _: sym_unknown
     instances:
       module_index:
