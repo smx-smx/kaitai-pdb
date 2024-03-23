@@ -260,6 +260,52 @@ types:
       - id: num_sections
         type: u4
         doc: 'nSects'
+  gsi_hdr:
+    enums:
+      version:
+        # 0xeffe0000 + 19990810
+        0xF12F091A: v70
+    seq:
+      - id: signature
+        type: u4
+      - id: version
+        type: u4
+        enum: version
+      - id: size_hash_records
+        type: u4
+      - id: size_hash_buckets
+        type: u4
+    instances:
+      num_hash_records:
+        value: size_hash_records / sizeof<gsi_hash_record>
+  gsi_hash_record:
+    seq:
+      - id: offset
+        type: u4
+      - id: reference_count
+        type: u4
+  global_symbols_stream:
+    seq:
+      - if: has_compressed_buckets
+        type: gsi_hdr
+      - id: compressed_hash_records
+        if: has_compressed_buckets
+        type: gsi_hash_record
+        repeat: expr
+        repeat-expr: header.num_hash_records
+      - id: hash_buckets
+        if: has_compressed_buckets
+        size: header.size_hash_buckets
+      #- id: hash_records
+      #  if: has_compressed_buckets == false
+      #  type: gsi_hash_record
+      # FIXME: uncompressed hash_records have varying size based on "m_fMinimalDbgInfo"
+    instances:
+      has_compressed_buckets:
+        value: header.signature == 0xFFFFFFFF and header.version == gsi_hdr::version::v70
+      header:
+        pos: 0
+        type: gsi_hdr
   public_symbols_stream:
     seq:
       - id: header
@@ -283,6 +329,11 @@ types:
       - id: section_map_size
         type: u4
     instances:
+      gs_symbols_data:
+        size: 0
+        if: gs_symbols_stream.stream_number > -1
+        process: cat(gs_symbols_stream.data)
+        type: global_symbols_stream
       ps_symbols_data:
         size: 0
         if: ps_symbols_stream.stream_number > -1
@@ -1496,6 +1547,11 @@ types:
         type: b1
         doc: 'true if this PDB is using CTypes.'
       - type: b13
+  symbol_records_stream:
+    seq:
+      - id: symbols
+        type: dbi_symbol(-1)
+        repeat: eos
   dbi_header_new:
     enums:
       version:
@@ -1555,6 +1611,16 @@ types:
       - id: reserved
         type: u4
     instances:
+      symbols_data:
+        size: 0
+        if: symbol_records_stream.stream_number > -1
+        process: cat(symbol_records_stream.data)
+        type: symbol_records_stream
+      gs_symbols_data:
+        size: 0
+        if: gs_symbols_stream.stream_number > -1
+        process: cat(gs_symbols_stream.data)
+        type: global_symbols_stream
       ps_symbols_data:
         size: 0
         if: ps_symbols_stream.stream_number > -1
@@ -3084,7 +3150,7 @@ types:
         repeat: eos
         type: fpo_data
   # contents of stream #1
-  pdb_stream:
+  pdb_stream_hdr:
     seq:
       - id: implementation_version
         type: u4
@@ -3096,6 +3162,161 @@ types:
       - id: age
         type: u4
         doc: 'no. of times this instance has been updated'
+  guid:
+    seq:
+      - id: data1
+        type: u4
+      - id: data2
+        type: u2
+      - id: data3
+        type: u2
+      - id: data4
+        type: u1
+        repeat: expr
+        repeat-expr: 8
+  pdb_stream_hdr_vc70:
+    seq:
+      - id: sig70
+        type: guid
+  pdb_bitset_word:
+    seq:
+      - id: bits
+        type: b1
+        repeat: eos
+  pdb_bitset:
+    seq:
+      - id: words
+        type: pdb_array(4)
+    instances:
+      values:
+        size: 0
+        process: cat(words.data)
+        type: pdb_bitset_word
+  pdb_map_kv_pair:
+    params:
+      - id: index
+        type: u4
+    seq:
+      - id: key
+        if: is_present
+        size: _parent.key_size
+      - id: value
+        if: is_present
+        size: _parent.value_size
+    instances:
+      is_present:
+        value: 
+          _parent.available_bitset.values.bits[index]
+  pdb_map:
+    params:
+      - id: key_size
+        type: u4
+      - id: value_size
+        type: u4
+    seq:
+      - id: cardinality
+        type: u4
+      - id: num_elements
+        type: u4
+      - id: available_bitset
+        type: pdb_bitset
+      - id: deleted_bitset
+        type: pdb_bitset
+      - id: key_value_pairs
+        type: pdb_map_kv_pair(_index)
+        repeat: expr
+        repeat-expr: num_elements
+  name_table_ni:
+    seq:
+      - id: string_table_data
+        type: pdb_buffer
+      - id: map_offset_index
+        type: pdb_map(4, 4)
+      - id: max_indices
+        type: u4
+  u4_finder:
+    params:
+      - id: search
+        type: u4
+    seq:
+      - id: buffer
+        type: u4
+        repeat: until
+        repeat-until: _ == search or _io.eof
+    instances:
+      found: 
+        value: buffer[end_pos - 4] == search
+      start_pos:
+        value: _io.pos
+      end_pos:
+        value: _io.pos
+  pdb_stream:
+    seq:
+      - id: header
+        type: pdb_stream_hdr
+      - id: header_vc70
+        if: is_vc70_pdb
+        type: pdb_stream_hdr_vc70
+      - id: name_table
+        if: is_vc70_pdb
+        type: name_table_ni
+      - id: invoke_extra_signatures_start
+        size: 0
+        if: extra_signatures_start >= 0
+      - id: extra_signatures
+        type: u4
+        repeat: eos
+      - id: invoke_extra_signatures_end
+        size: 0
+        if: extra_signatures_end >= 0
+    instances:
+      zzz_find_vc110:
+        pos: extra_signatures_start
+        if: extra_signatures_count > 0
+        size: extra_signatures_size
+        type: u4_finder(pdb_implementation_version::vc110.to_i)
+      zzz_find_vc140:
+        pos: extra_signatures_start
+        if: extra_signatures_count > 0
+        size: extra_signatures_size
+        type: u4_finder(pdb_implementation_version::vc140.to_i)
+      zzz_find_no_type_merge:
+        pos: extra_signatures_start
+        if: extra_signatures_count > 0
+        size: extra_signatures_size
+        type: u4_finder(0x4D544F4E) # NOTM
+      zzz_find_minimal_dbg_info:
+        pos: extra_signatures_start
+        if: extra_signatures_count > 0
+        size: extra_signatures_size
+        type: u4_finder(0x494E494D) # MINI
+    
+      extra_signatures_size:
+        value: extra_signatures_end - extra_signatures_start
+      extra_signatures_count:
+        value: extra_signatures_size / 4
+      extra_signatures_end:
+        value: _io.pos
+      extra_signatures_start:
+        value: _io.pos
+      is_vc2_pdb:
+        value: stream_size == sizeof<pdb_stream_hdr>
+      is_vc70_pdb:
+        value: header.implementation_version.to_i > pdb_implementation_version::vc70_deprecated.to_i
+      is_vc110_pdb:
+        value: zzz_find_vc110.found
+      is_vc140_pdb:
+        value: zzz_find_vc140.found
+      is_no_type_merge_pdb:
+        value: zzz_find_no_type_merge.found
+      is_minimal_dbg_info_pdb:
+        value: zzz_find_minimal_dbg_info.found
+      zzz_stream_size:
+        type: get_stream_size(default_stream::pdb.to_i)
+      stream_size:
+        value: zzz_stream_size.value
+      end_of_hdr:
+        value: _io.pos
   debug_data:
     seq:
       - id: fpo_stream
