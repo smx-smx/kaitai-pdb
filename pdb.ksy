@@ -329,6 +329,11 @@ types:
       - id: section_map_size
         type: u4
     instances:
+      symbols_data:
+        size: 0
+        if: symbol_records_stream.stream_number > -1
+        process: cat(symbol_records_stream.data)
+        type: symbol_records_stream
       gs_symbols_data:
         size: 0
         if: gs_symbols_stream.stream_number > -1
@@ -3588,6 +3593,18 @@ types:
         size: header_new.debug_header_size
         type: debug_data
     instances:
+      symbols_data:
+        value: 'is_new_hdr
+          ? header_new.symbols_data
+          : header_old.symbols_data'
+      gs_symbols_data:
+        value: 'is_new_hdr
+          ? header_new.gs_symbols_data
+          : header_old.gs_symbols_data'
+      ps_symbols_data:
+        value: 'is_new_hdr
+          ? header_new.ps_symbols_data
+          : header_old.ps_symbols_data'
       is_new_hdr:
         value: signature == -1
       # invalid gs/ps syms marker for DBI old/new detection

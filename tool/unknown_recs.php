@@ -65,7 +65,40 @@ if($doTypes){
 	print("\n");
 }
 
+$handleSym = function($s) use($symTypes, $debug, &$seen){
+	$sd = $s->data();
+	$type = $sd->type();
+	$body = $sd->body();
+	$length = $sd->length();
+	// no body, treat as "known"
+	if($body === null) return false;
+
+	$klass = get_class($body);
+	$isUnknown = $klass === "Pdb\SymUnknown";
+	$symTypeName = $symTypes[$type];
+	if($isUnknown){
+		$body_data = $body->data();
+		if(!isset($seen[$symTypeName])){
+			print("\n{$symTypeName} ({$length})\n");
+			$seen[$symTypeName] = true;
+			print(bin2hex($body_data) . "\n");
+		}
+	}
+	return $isUnknown;
+};
+
 if($doSyms){
+	do {
+		print("... loading symbol records ... ");
+		$dbi = $pdb->dbi();
+		if($dbi === null) break;
+		$sd = $dbi->symbolsData();
+		print("DONE!\n");
+		foreach($sd->symbols() as $i => $sym){
+			$handleSym($sym);
+		}
+	} while(false);
+
 	do {
 		print("... loading symbols ... ");
 		$dbi = $pdb->dbi();
@@ -82,23 +115,7 @@ if($doSyms){
 			$syms = $sd->symbols();
 			$n_syms = count($syms);
 			foreach($syms as $j => $s){
-				$sd = $s->data();
-				$type = $sd->type();
-				$body = $sd->body();
-				$length = $sd->length();
-				if($body === null) continue;
-
-				$klass = get_class($body);
-				$isUnknown = $klass === "Pdb\SymUnknown";
-				$symTypeName = $symTypes[$type];
-				if($isUnknown){
-					$body_data = $body->data();
-					if(!isset($seen[$symTypeName])){
-						print("\n{$symTypeName} ({$length})\n");
-						$seen[$symTypeName] = true;
-						print(bin2hex($body_data) . "\n");
-					}
-				} else if($debug){
+				if(!$handleSym($s) && $debug){
 					//print("\33[2K\r");
 					print("\r[sym] mod: {$i}/{$n_mods}, sym: {$j}/{$n_syms}, {$symTypeName}\x1B[K");
 				}
