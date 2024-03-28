@@ -1150,6 +1150,25 @@ types:
         repeat: expr
         repeat-expr: count
         doc: 'List of functions, dim == count'
+  sym_reference:
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: sum_name
+        type: u4
+        doc: 'SUC of the name'
+      - id: symbol_offset
+        type: u4
+        doc: 'Offset of actual symbol in $$Symbols'
+      - id: module_index
+        type: u2
+        doc: 'Module containing the actual symbol'
+      - id: fill
+        type: u2
+        doc: 'align this record'
+      - id: name
+        type: pdb_string(string_prefixed)
   sym_skip:
     seq:
       - size-eos: true
@@ -2753,10 +2772,40 @@ types:
             dbi::symbol_type::s_manslot: sym_attr_slot(false)
             dbi::symbol_type::s_manslot_st: sym_attr_slot(true)
             dbi::symbol_type::s_sepcode: sym_sepcode
+            dbi::symbol_type::s_procref_st: sym_reference(true)
+            dbi::symbol_type::s_dataref_st: sym_reference(true)
+            dbi::symbol_type::s_lprocref_st: sym_reference(true)
+            dbi::symbol_type::s_procref: sym_reference(false)
+            dbi::symbol_type::s_dataref: sym_reference(false)
+            dbi::symbol_type::s_lprocref: sym_reference(false)
             _: sym_unknown
     instances:
       module_index:
         value: _parent.module_index
+  dbi_extra_data:
+    seq:
+      - id: type
+        type: u2
+        enum: dbi::symbol_type
+      # it looks like Microsoft forgot to update the length field for PROCREF_ST symbols
+      # instead referring to this extra data as "hidden"
+      - id: procref_data
+        if: is_procref_st
+        type: sym_reference(true)
+    instances:
+      is_procref_st:
+        value: 'type == dbi::symbol_type::s_procref_st
+          or type == dbi::symbol_type::s_lprocref_st'
+      zzz_procref_alignment:
+        if: is_procref_st
+        type: align(procref_data.name.name_length + 1, 4)
+      alignment:
+        value: 'is_procref_st
+          ? zzz_procref_alignment.value : 0'
+      extra_length:
+        value: 'is_procref_st
+          ? zzz_procref_alignment.aligned
+          : 0'
   dbi_symbol:
     params:
       - id: module_index
@@ -2768,14 +2817,19 @@ types:
         if: data_pos >= 0
         size: 0
       # skip data
-      - size: length
+      - size: actual_length
     instances:
+      zzz_extra_data:
+        pos: data_pos
+        type: dbi_extra_data
       data_pos:
         value: _io.pos
+      actual_length:
+        value: length + zzz_extra_data.extra_length 
       data:
         pos: data_pos
-        size: length
-        type: dbi_symbol_data(length)
+        size: actual_length
+        type: dbi_symbol_data(actual_length)
         if: length > 0
   module_symbols:
     params:

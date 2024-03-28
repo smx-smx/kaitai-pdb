@@ -65,7 +65,10 @@ if($doTypes){
 	print("\n");
 }
 
-$handleSym = function($s) use($symTypes, $debug, &$seen){
+$handleSym = function($s, array $iModMac, array $iSymMac) use($symTypes, $debug, &$seen){
+	list($iMod, $modMac) = $iModMac;
+	list($iSym, $symMac) = $iSymMac;
+
 	$sd = $s->data();
 	$type = $sd->type();
 	$body = $sd->body();
@@ -84,23 +87,28 @@ $handleSym = function($s) use($symTypes, $debug, &$seen){
 			print(bin2hex($body_data) . "\n");
 		}
 	}
+	if(!$isUnknown && $debug){
+		print("\r[sym] mod: {$iMod}/{$modMac}, sym: {$iSym}/{$symMac}, {$symTypeName}\x1B[K");
+	}
 	return $isUnknown;
 };
 
 if($doSyms){
 	do {
-		print("... loading symbol records ... ");
+		print("\n... loading symbol records ... ");
 		$dbi = $pdb->dbi();
 		if($dbi === null) break;
 		$sd = $dbi->symbolsData();
 		print("DONE!\n");
-		foreach($sd->symbols() as $i => $sym){
-			$handleSym($sym);
+		$syms = $sd->symbols();
+		$symsMac = count($syms);
+		foreach($syms as $i => $sym){
+			$handleSym($sym, [-1, -1], [$i, $symsMac]);
 		}
 	} while(false);
 
 	do {
-		print("... loading symbols ... ");
+		print("\n... loading symbols ... ");
 		$dbi = $pdb->dbi();
 		if($dbi === null) break;
 		$mods = $dbi->modules()->modules();
@@ -115,10 +123,7 @@ if($doSyms){
 			$syms = $sd->symbols();
 			$n_syms = count($syms);
 			foreach($syms as $j => $s){
-				if(!$handleSym($s) && $debug){
-					//print("\33[2K\r");
-					print("\r[sym] mod: {$i}/{$n_mods}, sym: {$j}/{$n_syms}, {$symTypeName}\x1B[K");
-				}
+				$handleSym($s, [$i, $n_mods], [$j, $n_syms]);
 			}
 		}
 	} while(false);
