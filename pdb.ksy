@@ -2936,11 +2936,17 @@ types:
   c13_subsection:
     seq:
       - id: type
-        type: u4
+        type: b31
         enum: c13_lines::subsection_type
+      - id: is_ignored
+        type: b1
+        doc: 'if this bit is set in a subsection type then ignore the subsection contents'
       - id: length
         type: u4
+      - size: length
+        if: is_ignored
       - id: data
+        if: is_ignored == false
         size: length
         type:
           switch-on: type
