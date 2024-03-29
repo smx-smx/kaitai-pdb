@@ -2858,9 +2858,117 @@ types:
         if: symbols_size > 0
         size: symbols_size
         type: module_symbols(module_index)
+      - id: lines
+        size: _parent.lines_size
+      - id: c13_lines
+        size: _parent.c13_lines_size
+        type: c13_lines
     instances:
       symbols_size:
         value: _parent.symbols_size - 4
+  c13_subsection_ignore:
+    seq:
+      - id: data
+        size-eos: true
+  c13_column:
+    doc: 'CV_Column_t'
+    seq:
+      - id: column_start_offset
+        type: u2
+      - id: column_end_offset
+        type: u2
+  c13_line:
+    doc: 'CV_Line_t'
+    seq:
+      - id: offset
+        type: u4
+        doc: 'Offset to start of code bytes for line number'
+      - id: linenum_start
+        type: b24
+        doc: 'line where statement/expression starts'
+      - id: delta_line_end
+        type: b7
+        doc: 'delta to line where statement ends (optional)'
+      - id: is_statement
+        type: b1
+        doc: 'true if a statement linenumber, else an expression line num'
+    instances:
+      is_special_not_step_onto:
+        doc: 'The compiler will generate special line numbers like 0xfeefee (not to step onto)'
+        value: linenum_start == 0xfeefee
+      is_special_not_step_into:
+        doc: 'The compiler will generate special line numbers like 0xf00f00 (not to step into)'
+        value: linenum_start == 0xf00f00
+  c13_file_block:
+    seq:
+      - id: file_id
+        type: u4
+      - id: num_lines
+        type: u4
+      - id: file_block_length
+        type: u4
+      - id: lines
+        type: c13_line
+        repeat: expr
+        repeat-expr: num_lines
+      - id: columns
+        if: _parent.have_columns
+        type: c13_column
+        repeat: expr
+        repeat-expr: num_lines
+  c13_subsection_lines:
+    seq:
+      - id: contents_offset
+        type: u4
+      - id: contents_segment
+        type: u2
+      - id: flags
+        type: u2
+      - id: contents_size
+        type: u4
+      - id: file_blocks
+        type: c13_file_block
+        repeat: eos
+    instances:
+      have_columns:
+        # CV_LINES_HAVE_COLUMNS: 0x1
+        value: (flags & 0x1) == 0x1
+  c13_subsection:
+    seq:
+      - id: type
+        type: u4
+        enum: c13_lines::subsection_type
+      - id: length
+        type: u4
+      - id: data
+        size: length
+        type:
+          switch-on: type
+          cases:
+            c13_lines::subsection_type::lines: c13_subsection_lines
+            c13_lines::subsection_type::ignore: c13_subsection_ignore
+            _: c13_subsection_ignore
+  c13_lines:
+    enums:
+      subsection_type:
+        0x80000000: ignore # if this bit is set in a subsection type then ignore the subsection contents
+        0xf1: symbols
+        0xf2: lines
+        0xf3: string_table
+        0xf4: file_chk_sms
+        0xf5: frame_data
+        0xf6: inlinee_lines
+        0xf7: cross_scope_imports
+        0xf8: cross_scope_exports
+        0xf9: il_lines
+        0xfa: func_mdtoken_map
+        0xfb: type_mdtoken_map
+        0xfc: merged_assembly_input
+        0xfd: coff_symbol_rva
+    seq:
+      - id: subsection
+        type: c13_subsection
+        repeat: eos
   module_info:
     params:
       - id: module_index
