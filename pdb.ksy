@@ -2933,6 +2933,122 @@ types:
       have_columns:
         # CV_LINES_HAVE_COLUMNS: 0x1
         value: (flags & 0x1) == 0x1
+  c13_subsection_stringtable:
+    seq:
+      - id: strings
+        type: str
+        terminator: 0
+        encoding: UTF-8
+        repeat: eos
+  c13_frame_data:
+    seq:
+      - id: rva_start
+        type: u4
+      - id: block_size
+        type: u4
+      - id: locals_size
+        type: u4
+      - id: params_size
+        type: u4
+      - id: max_stack
+        type: u4
+      - id: frame_func
+        type: u4
+      - id: prolog_size
+        type: u2
+      - id: saved_regs_size
+        type: u2
+      - id: has_seh
+        type: b1
+      - id: has_eh
+        type: b1
+      - id: is_function_start
+        type: b1
+      - id: reserved
+        type: b29
+  c13_file_checksum:
+    enums:
+      checksum_type:
+        0: none
+        1: md5
+        2: sha1
+        3: sha256
+    seq:
+      - id: invoke_start_pos
+        if: start_pos >= 0
+        size: 0
+      - id: filename_offset
+        type: u4
+      - id: checksum_size
+        type: u1
+      - id: checksum_type
+        type: u1
+        enum: checksum_type
+      - id: checksum_data
+        size: checksum_size
+      - id: invoke_end_pos
+        if: end_pos >= 0
+        size: 0
+      - id: alignment
+        size: padding
+    instances:
+      start_pos:
+        value: _io.pos
+      end_pos:
+        value: _io.pos
+      zzz_alignment:
+        type: align(end_pos - start_pos, 4)
+      padding:
+        value: zzz_alignment.aligned - zzz_alignment.value
+  c13_inlinee_source_line:
+    seq:
+      - id: inlinee
+        type: u4
+        doc: 'function id.'
+      - id: file_id
+        type: u4
+        doc: 'offset into file table DEBUG_S_FILECHKSMS'
+      - id: source_line_number
+        type: u4
+        doc: 'definition start line number.'
+  c13_inlinee_source_line_ex:
+    seq:
+      - id: base
+        type: c13_inlinee_source_line
+      - id: count_of_extra_files
+        type: u4
+      - id: extra_file_ids
+        type: u4
+        repeat: expr
+        repeat-expr: count_of_extra_files
+  c13_subsection_filechecksums:
+    doc: 'file checksums'
+    seq:
+      - id: checksums
+        type: c13_file_checksum
+        repeat: eos
+  c13_subsection_inlinee_lines:
+    enums:
+      signature:
+        0: signature
+        1: signature_ex
+    seq:
+      - id: signature
+        type: u4
+        enum: signature
+      - id: lines
+        if: signature == signature::signature
+        type: c13_inlinee_source_line
+        repeat: eos
+      - id: lines_ex
+        if: signature == signature::signature_ex
+        type: c13_inlinee_source_line_ex
+        repeat: eos
+  c13_subsection_frame_data:
+    seq:
+      - id: frames
+        type: c13_frame_data
+        repeat: eos
   c13_subsection:
     seq:
       - id: type
@@ -2951,8 +3067,13 @@ types:
         type:
           switch-on: type
           cases:
+            c13_lines::subsection_type::string_table: c13_subsection_stringtable
+            c13_lines::subsection_type::il_lines: c13_subsection_lines
             c13_lines::subsection_type::lines: c13_subsection_lines
             c13_lines::subsection_type::ignore: c13_subsection_ignore
+            c13_lines::subsection_type::file_chk_sms: c13_subsection_filechecksums
+            c13_lines::subsection_type::inlinee_lines: c13_subsection_inlinee_lines
+            c13_lines::subsection_type::frame_data: c13_subsection_frame_data
             _: c13_subsection_ignore
   c13_lines:
     enums:
