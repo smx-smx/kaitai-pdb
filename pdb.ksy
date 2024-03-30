@@ -3552,17 +3552,15 @@ types:
         if: is_vc70_pdb
         type: pdb_stream_hdr_vc70
       - id: name_table
-        if: is_vc70_pdb
         type: name_table_ni
       - id: invoke_extra_signatures_start
         size: 0
         if: extra_signatures_start >= 0
       - id: extra_signatures
+        if: is_between_vc4_vc140
         type: u4
-        repeat: eos
-      - id: invoke_extra_signatures_end
-        size: 0
-        if: extra_signatures_end >= 0
+        repeat: expr
+        repeat-expr: extra_signatures_count
     instances:
       zzz_find_vc110:
         pos: extra_signatures_start
@@ -3585,26 +3583,33 @@ types:
         size: extra_signatures_size
         type: u4_finder(0x494E494D) # MINI
     
+      zzz_extra_signatures_size:
+        value: _io.size - extra_signatures_start
       extra_signatures_size:
-        value: extra_signatures_end - extra_signatures_start
+        value: (zzz_extra_signatures_size / 4) * 4
       extra_signatures_count:
-        value: extra_signatures_size / 4
+        value: 'is_between_vc4_vc140
+          ? extra_signatures_size / 4
+          : 0'
       extra_signatures_end:
         value: _io.pos
       extra_signatures_start:
         value: _io.pos
+      is_between_vc4_vc140:
+        value: 'header.implementation_version.to_i >= pdb_implementation_version::vc4.to_i
+          and header.implementation_version.to_i <= pdb_implementation_version::vc140.to_i'
       is_vc2_pdb:
         value: stream_size == sizeof<pdb_stream_hdr>
       is_vc70_pdb:
         value: header.implementation_version.to_i > pdb_implementation_version::vc70_deprecated.to_i
       is_vc110_pdb:
-        value: zzz_find_vc110.found
+        value: '(extra_signatures_count > 0) ? zzz_find_vc110.found : false'
       is_vc140_pdb:
-        value: zzz_find_vc140.found
+        value: '(extra_signatures_count > 0) ? zzz_find_vc140.found : false'
       is_no_type_merge_pdb:
-        value: zzz_find_no_type_merge.found
+        value: '(extra_signatures_count > 0) ? zzz_find_no_type_merge.found : false'
       is_minimal_dbg_info_pdb:
-        value: zzz_find_minimal_dbg_info.found
+        value: '(extra_signatures_count > 0) ? zzz_find_minimal_dbg_info.found : false'
       zzz_stream_size:
         type: get_stream_size(default_stream::pdb.to_i)
       stream_size:
