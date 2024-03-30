@@ -2677,8 +2677,11 @@ types:
         type: get_module_io(module_index)
       module_io:
         value: zzz_module_io.value
+      is_offset_eof:
+        value: offset >= module_io.size
       symbol:
         io: module_io
+        if: is_offset_eof == false
         pos: offset
         type: dbi_symbol(module_index)
   get_module_io:
