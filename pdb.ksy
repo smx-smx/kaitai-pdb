@@ -238,6 +238,7 @@ types:
         repeat: expr
         repeat-expr: num_streams
   psgi_header:
+    doc: 'PSGSIHDR'
     seq:
       - id: sym_hash_size
         type: u4
@@ -261,6 +262,7 @@ types:
         type: u4
         doc: 'nSects'
   gsi_hdr:
+    doc: 'GSIHashHdr'
     enums:
       version:
         # 0xeffe0000 + 19990810
@@ -268,22 +270,29 @@ types:
     seq:
       - id: signature
         type: u4
+        doc: 'verSignature'
       - id: version
         type: u4
         enum: version
+        doc: 'verHdr'
       - id: size_hash_records
         type: u4
+        doc: 'cbHr'
       - id: size_hash_buckets
         type: u4
+        doc: 'cbBuckets'
     instances:
       num_hash_records:
         value: size_hash_records / sizeof<gsi_hash_record>
   gsi_hash_record:
+    doc: 'HRFile'
     seq:
       - id: offset
         type: u4
+        doc: 'off'
       - id: reference_count
         type: u4
+        doc: 'cRef'
   global_symbols_stream:
     seq:
       - if: has_compressed_buckets
@@ -364,7 +373,7 @@ types:
         if: has_next_block
         value: _parent.items[index+1]
       block_end:
-        value: 'has_next_block == true ? next_block.type_index : _root.tpi.header.max_type_index'
+        value: 'has_next_block == true ? next_block.type_index : _root.tpi.max_type_index'
       block_length:
         value: block_end - type_index
   ti_offset_list:
@@ -409,6 +418,7 @@ types:
         pos: _parent.hash_head_list_slice.offset
         size: _parent.hash_head_list_slice.size
   tpi_hash:
+    doc: 'TpiHash'
     seq:
       - id: hash_stream
         type: pdb_stream_ref
@@ -436,19 +446,33 @@ types:
         size: 0
         process: cat(hash_stream.data)
         type: tpi_hash_data
-  tpi_header:
-    enums:
-      version:
-        19950410: v40
-        19951122: v41
-        19960307: v50_beta
-        19961031: v50
-        19990903: v70
-        20040203: v80
+
+  
+  tpi_header16:
+    doc: 'HDR_16t'
     seq:
       - id: version
         type: u4
-        enum: version
+        enum: tpi::tpi_version
+      - id: min_type_index
+        type: u2
+        doc: 'lowest TI'
+      - id: max_type_index
+        type: u2
+        doc: 'highest TI + 1'
+      - id: gp_rec_size
+        type: u4
+        doc: 'count of bytes used by the gprec which follows.'
+      - id: hash_stream
+        type: pdb_stream_ref
+        doc: 'stream to hold hash values'
+  
+  tpi_header:
+    doc: 'HDR'
+    seq:
+      - id: version
+        type: u4
+        enum: tpi::tpi_version
         doc: 'version which created this TypeServer'
       - id: header_size
         type: u4
@@ -474,6 +498,7 @@ types:
       - id: value
         type: s1
   cv_properties:
+    doc: 'CV_prop_t'
     seq:
       - id: packed
         type: b1
@@ -1282,6 +1307,13 @@ types:
         repeat: eos
   tpi:
     enums:
+      tpi_version:
+        19950410: v40
+        19951122: v41
+        19960307: v50_beta
+        19961031: v50
+        19990903: v70
+        20040203: v80
       cv_cookietype:
         0: copy
         1: xor_sp
@@ -1550,11 +1582,25 @@ types:
         0xfe: lf_pad14
         0xff: lf_pad15
     seq:
-      - id: header
+      - id: header16
+        if: version.to_i <= tpi::tpi_version::v41.to_i
+        type: tpi_header16
+      - id: header32
+        if: version.to_i > tpi::tpi_version::v41.to_i
         type: tpi_header
       - id: types_data
         size-eos: true
     instances:
+      min_type_index:
+        value: '(has_header16) ? header16.min_type_index : header32.min_type_index'
+      max_type_index:
+        value: '(has_header16) ? header16.max_type_index : header32.max_type_index'
+      has_header16:
+        value: 'version.to_i <= tpi::tpi_version::v41.to_i'
+      version:
+        pos: 0
+        type: u4
+        enum: tpi::tpi_version
       types:
         size: 0
         type: tpi_types
@@ -2670,6 +2716,7 @@ types:
       - id: module_index
         type: u4
     seq:
+      # data offset
       - id: offset
         type: u4
     instances:
@@ -2682,6 +2729,7 @@ types:
       symbol:
         io: module_io
         if: is_offset_eof == false
+        # go before length field
         pos: offset
         type: dbi_symbol(module_index)
   get_module_io:
@@ -4049,11 +4097,11 @@ instances:
   min_type_index:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.header.min_ti
-      : tpi.header.min_type_index'
+      : tpi.min_type_index'
   max_type_index:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.header.max_ti
-      : tpi.header.max_type_index'
+      : tpi.max_type_index'
   types:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.types
