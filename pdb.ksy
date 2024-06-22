@@ -129,7 +129,7 @@ types:
         if: is_valid_stream
         value: zzz_data.value
   pdb_stream_entry_jg:
-    doc: 'SI_PERSIST'
+    doc-ref: 'SI_PERSIST'
     params:
       - id: stream_number
         type: u4
@@ -144,7 +144,7 @@ types:
       num_directory_pages:
         value: zzz_num_directory_pages.num_pages
   pdb_stream_entry_ds:
-    doc: 'SI_PERSIST'
+    doc-ref: 'SI_PERSIST'
     params:
       - id: stream_number
         type: s4
@@ -238,31 +238,31 @@ types:
         repeat: expr
         repeat-expr: num_streams
   psgi_header:
-    doc: 'PSGSIHDR'
+    doc-ref: 'PSGSIHDR'
     seq:
       - id: sym_hash_size
         type: u4
-        doc: 'cbSymHash'
+        doc-ref: 'cbSymHash'
       - id: address_map_size
         type: u4
-        doc: 'cbAddrMap'
+        doc-ref: 'cbAddrMap'
       - id: num_thunks
         type: u4
-        doc: 'nThunks'
+        doc-ref: 'nThunks'
       - id: thunk_size
         type: u4
-        doc: 'cbSizeOfThunk'
+        doc-ref: 'cbSizeOfThunk'
       - id: thunk_table_section_index
         type: u4
-        doc: 'isectThunkTable'
+        doc-ref: 'isectThunkTable'
       - id: thunk_table_offset
         type: u4
-        doc: 'offThunkTable'
+        doc-ref: 'offThunkTable'
       - id: num_sections
         type: u4
-        doc: 'nSects'
+        doc-ref: 'nSects'
   gsi_hdr:
-    doc: 'GSIHashHdr'
+    doc-ref: 'GSIHashHdr'
     enums:
       version:
         # 0xeffe0000 + 19990810
@@ -270,29 +270,29 @@ types:
     seq:
       - id: signature
         type: u4
-        doc: 'verSignature'
+        doc-ref: 'verSignature'
       - id: version
         type: u4
         enum: version
-        doc: 'verHdr'
+        doc-ref: 'verHdr'
       - id: size_hash_records
         type: u4
-        doc: 'cbHr'
+        doc-ref: 'cbHr'
       - id: size_hash_buckets
         type: u4
-        doc: 'cbBuckets'
+        doc-ref: 'cbBuckets'
     instances:
       num_hash_records:
         value: size_hash_records / sizeof<gsi_hash_record>
   gsi_hash_record:
-    doc: 'HRFile'
+    doc-ref: 'HRFile'
     seq:
       - id: offset
         type: u4
-        doc: 'off'
+        doc-ref: 'off'
       - id: reference_count
         type: u4
-        doc: 'cRef'
+        doc-ref: 'cRef'
   global_symbols_stream:
     seq:
       - if: has_compressed_buckets
@@ -418,29 +418,36 @@ types:
         pos: _parent.hash_head_list_slice.offset
         size: _parent.hash_head_list_slice.size
   tpi_hash:
-    doc: 'TpiHash'
+    doc-ref: 'TpiHash'
     seq:
       - id: hash_stream
         type: pdb_stream_ref
         doc: 'main hash stream'
+        doc-ref: 'SN'
       - id: aux_hash_stream
         type: pdb_stream_ref
         doc: 'auxilliary hash data if necessary'
+        doc-ref: 'snPad'
       - id: hash_key_size
         type: u4
         doc: 'size of hash key'
+        doc-ref: 'cbHashKey'
       - id: num_hash_buckets
         type: u4
         doc: 'how many buckets we have'
+        doc-ref: 'cHashBuckets'
       - id: hash_values_slice
         type: tpi_slice
         doc: 'offcb of hashvals'
+        doc-ref: 'offcbHashVals'
       - id: type_offsets_slice
         type: tpi_slice
         doc: 'offcb of (TI,OFF) pairs'
+        doc-ref: 'offcbTiOff'
       - id: hash_head_list_slice
         type: tpi_slice
         doc: 'offcb of hash head list, maps (hashval,ti), where ti is the head of the hashval chain.'
+        doc-ref: 'offcbHashAdj'
     instances:
       tpi_hash_data:
         size: 0
@@ -449,46 +456,58 @@ types:
 
   
   tpi_header16:
-    doc: 'HDR_16t'
-    seq:
-      - id: version
-        type: u4
-        enum: tpi::tpi_version
-      - id: min_type_index
-        type: u2
-        doc: 'lowest TI'
-      - id: max_type_index
-        type: u2
-        doc: 'highest TI + 1'
-      - id: gp_rec_size
-        type: u4
-        doc: 'count of bytes used by the gprec which follows.'
-      - id: hash_stream
-        type: pdb_stream_ref
-        doc: 'stream to hold hash values'
-  
-  tpi_header:
-    doc: 'HDR'
+    doc-ref: 'HDR_16t'
     seq:
       - id: version
         type: u4
         enum: tpi::tpi_version
         doc: 'version which created this TypeServer'
-      - id: header_size
-        type: u4
-        doc: 'size of the header, allows easier upgrading and backwards compatibility'
+        doc-ref: 'vers'
       - id: min_type_index
-        type: u4
+        type: u2
         doc: 'lowest TI'
+        doc-ref: 'tiMin'
       - id: max_type_index
-        type: u4
+        type: u2
         doc: 'highest TI + 1'
+        doc-ref: 'tiMac'
       - id: gp_rec_size
         type: u4
         doc: 'count of bytes used by the gprec which follows.'
+        doc-ref: 'cbGprec'
+      - id: hash_stream
+        type: pdb_stream_ref
+        doc: 'stream to hold hash values'
+        doc-ref: 'snHash'
+  
+  tpi_header:
+    doc-ref: 'HDR'
+    seq:
+      - id: version
+        type: u4
+        enum: tpi::tpi_version
+        doc: 'version which created this TypeServer'
+        doc-ref: 'vers'
+      - id: header_size
+        type: u4
+        doc: 'size of the header, allows easier upgrading and backwards compatibility'
+        doc-ref: 'cbHdr'
+      - id: min_type_index
+        type: u4
+        doc: 'lowest TI'
+        doc-ref: 'tiMin'
+      - id: max_type_index
+        type: u4
+        doc: 'highest TI + 1'
+        doc-ref: 'tiMac'
+      - id: gp_rec_size
+        type: u4
+        doc: 'count of bytes used by the gprec which follows.'
+        doc-ref: 'cbGprec'
       - id: hash
         type: tpi_hash
         doc: 'hash stream schema'
+        doc-ref: 'tpihash'
   cv_numeric_literal:
     params:
       - id: value
@@ -498,114 +517,155 @@ types:
       - id: value
         type: s1
   cv_properties:
-    doc: 'CV_prop_t'
+    doc-ref: 'CV_prop_t'
     seq:
       - id: packed
         type: b1
         doc: 'true if structure is packed'
+        doc-ref: 'packed'
       - id: ctor
         type: b1
         doc: 'true if constructors or destructors present'
+        doc-ref: 'ctor'
       - id: overlapped_operators
         type: b1
         doc: 'true if overloaded operators present'
+        doc-ref: 'ovlops'
       - id: is_nested
         type: b1
         doc: 'true if this is a nested class'
+        doc-ref: 'isnested'
       - id: contains_nested
         type: b1
         doc: 'true if this class contains nested types'
+        doc-ref: 'cnested'
       - id: overlapped_assignment
         type: b1
         doc: 'true if overloaded assignment (=)'
+        doc-ref: 'opassign'
       - id: casting_methods
         type: b1
         doc: 'true if casting methods'
+        doc-ref: 'opcast'
       - id: forward_reference
         type: b1
         doc: 'true if forward reference (incomplete defn)'
+        doc-ref: 'fwdref'
       - id: scoped_definition
         type: b1
         doc: 'scoped definition'
+        doc-ref: 'scoped'
       - id: has_unique_name
         type: b1
         doc: 'true if there is a decorated name following the regular name'
+        doc-ref: 'hasuniquename'
       - id: sealed
         type: b1
         doc: 'true if class cannot be used as a base class'
+        doc-ref: 'sealed'
       - id: hfa
         type: b2
         enum: tpi::cv_hfa
+        doc: 'CV_HFA_e'
+        doc-ref: 'hfa'
       - id: intrinsic
         type: b1
         doc: 'true if class is an intrinsic type (e.g. __m128d)'
+        doc-ref: 'intrinsic'
       - id: mocom
         type: b2
         enum: tpi::cv_mocom_udt
+        doc: 'CV_MOCOM_UDT_e'
+        doc-ref: 'mocom'
   cv_proc_flags:
+    doc-ref: 'CV_PROCFLAGS'
     seq:
       - id: nofpo
         type: b1
         doc: 'frame pointer present'
+        doc-ref: 'CV_PFLAG_NOFPO'
       - id: interrupt
         type: b1
         doc: 'interrupt return'
+        doc-ref: 'CV_PFLAG_INT'
       - id: far_return
         type: b1
         doc: 'far return'
+        doc-ref: 'CV_PFLAG_FAR'
       - id: never
         type: b1
         doc: 'function does not return'
+        doc-ref: 'CV_PFLAG_NEVER'
       - id: not_reached
         type: b1
         doc: 'label isn''t fallen into'
+        doc-ref: 'CV_PFLAG_NOTREACHED'
       - id: cust_call
         type: b1
         doc: 'custom calling convention'
+        doc-ref: 'CV_PFLAG_CUST_CALL'
       - id: no_inline
         type: b1
         doc: 'function marked as noinline'
+        doc-ref: 'CV_PFLAG_NOINLINE'
       - id: opt_debug_info
         type: b1
         doc: 'function has debug information for optimized code'
+        doc-ref: 'CV_PFLAG_OPTDBGINFO'
   cv_func_attributes:
+    doc-ref: 'CV_funcattr_t'
     seq:
       - id: cxx_return_udt
         type: b1
         doc: 'true if C++ style ReturnUDT'
+        doc-ref: 'cxxreturnudt'
       - id: is_constructor
         type: b1
         doc: 'true if func is an instance constructor'
+        doc-ref: 'ctor'
       - id: is_virtual_constructor
         type: b1
+        doc-ref: 'ctorvbase'
         doc: 'true if func is an instance constructor of a class with virtual bases'
       - type: b5
+        doc: 'unused'
+        doc-ref: 'unused'
   cv_field_attributes:
+    doc-ref: 'CV_fldattr_t'
     seq:
       - id: access_protection
         type: b2
         doc: 'access protection'
+        doc-ref: 'access'
         enum: tpi::cv_access
       - id: method_properties
         type: b3
-        doc: 'method properties'
         enum: tpi::cv_methodprop
+        doc: 'method properties'
+        doc-ref: 'mprop'
       - id: is_pseudo
         type: b1
         doc: 'compiler generated fcn and does not exist'
+        doc-ref: 'pseudo'
       - id: no_inherit
         type: b1
         doc: 'true if class cannot be inherited'
+        doc-ref: 'noinherit'
       - id: no_construct
         type: b1
         doc: 'true if class cannot be constructed'
+        doc-ref: 'noconstruct'
       - id: compiler_generated
         type: b1
         doc: 'compiler generated fcn and does exist'
+        doc-ref: 'compgenx'
       - id: is_sealed
         type: b1
         doc: 'true if method cannot be overridden'
+        doc-ref: 'sealed'
       - type: b6
+        doc: 'unused'
+        doc-ref: 'unused'
   cv_numeric_type:
     seq:
       - id: type
@@ -644,6 +704,8 @@ types:
         if: array_index >= 0
         value: _root.types[array_index]
   lf_enum:
+    doc: 'LF_ENUM'
+    doc-ref: 'lfEnum'
     params:
       - id: string_prefixed
         type: bool
@@ -651,87 +713,123 @@ types:
       - id: num_elements
         type: u2
         doc: 'count of number of elements in class'
+        doc-ref: 'count'
       - id: type_properties
         type: cv_properties
         doc: 'property attribute field'
+        doc-ref: 'property'
       - id: underlying_type
         type: tpi_type_ref
         doc: 'underlying type of the enum'
+        doc-ref: 'utype'
       - id: field_type
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
+        doc-ref: 'field'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'length prefixed name of enum'
+        doc-ref: 'Name'
   lf_enumerate:
+    doc: 'LF_ENUMERATE'
+    doc-ref: 'lfEnumerate'
     seq:
       - id: attributes
         type: cv_field_attributes
         doc: 'access'
+        doc-ref: 'attr'
       - id: value
         type: cv_numeric_type
         doc: 'variable length value field'
+        doc-ref: 'value'
       - id: field_name
         type: str
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name'
   lf_fieldlist_16t:
+    doc: 'LF_FIELDLIST_16t'
+    doc-ref: 'lfFieldList_16t'
     seq:
       - id: data
         type: tpi_type_data(true)
         repeat: eos
         doc: 'field list sub lists'
+        doc-ref: 'data'
   lf_fieldlist:
+    doc: 'LF_FIELDLIST'
+    doc-ref: 'lfFieldList'
     seq:
       - id: data
         type: tpi_type_data(true)
         repeat: eos
         doc: 'field list sub lists'
+        doc-ref: 'data'
   lf_arglist:
+    doc: 'LF_ARGLIST, LF_SUBSTR_LIST'
+    doc-ref: 'lfArgList'
     seq:
       - id: count
         type: u4
         doc: 'number of arguments'
+        doc-ref: 'count'
       - id: arguments
         type: tpi_type_ref
         repeat: expr
         repeat-expr: count
         doc: 'argument types'
+        doc-ref: 'arg'
   lf_arglist_16t:
+    doc: 'LF_ARGLIST_16t'
+    doc-ref: 'lfArgList_16t'
     seq:
       - id: count
         type: u2
         doc: 'number of arguments'
+        doc-ref: 'count'
       - id: arguments
         type: tpi_type_ref16
         repeat: expr
         repeat-expr: count
         doc: 'argument types'
+        doc-ref: 'arg'
   lf_bitfield:
+    doc: 'LF_BITFIELD'
+    doc-ref: 'lfBitfield'
     seq: 
       - id: type
         type: tpi_type_ref
         doc: 'type of bitfield'
+        doc-ref: 'type'
       - id: length
         type: u1
+        doc-ref: 'length'
       - id: position
         type: u1
+        doc-ref: 'position'
   lf_array_16t:
+    doc: 'LF_ARRAY_16t'
+    doc-ref: 'lfArray_16t'
     seq:
       - id: element_type
         type: tpi_type_ref16
         doc: 'type index of element type'
+        doc-ref: 'elemtype'
       - id: indexing_type
         type: tpi_type_ref16
         doc: 'type index of indexing type'
+        doc-ref: 'idxtype'
       - id: size
         type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
+        doc-ref: 'data.size'
       - id: name
         type: pdb_string(true)
         doc: 'array name'
+        doc-ref: 'data.name'
   lf_array:
+    doc: 'LF_ARRAY'
+    doc-ref: 'lfArray'
     params:
       - id: string_prefixed
         type: bool
@@ -739,15 +837,19 @@ types:
       - id: element_type
         type: tpi_type_ref
         doc: 'type index of element type'
+        doc-ref: 'elemtype'
       - id: indexing_type
         type: tpi_type_ref
         doc: 'type index of indexing type'
+        doc-ref: 'idxtype'
       - id: size
         type: cv_numeric_type
         doc: 'variable length data specifying size in bytes'
+        doc-ref: 'data.size'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'array name'
+        doc-ref: 'data.name'
   pdb_string:
     params:
       - id: is_prefixed
@@ -770,28 +872,37 @@ types:
       name:
         value: 'is_prefixed ? name_prefixed : name_cstring'
   lf_class_16t:
+    doc: 'LF_CLASS_16t, LF_STRUCT_16t'
+    doc-ref: 'lfClass_16t'
     seq:
       - id: number_of_elements
         type: u2
         doc: 'count of number of elements in class'
+        doc-ref: 'count'
       - id: field_type
         type: tpi_type_ref16
         doc: 'type index of LF_FIELD descriptor list'
+        doc-ref: 'field'
       - id: properties
         type: cv_properties
         doc: 'property attribute field (prop_t)'
+        doc-ref: 'property'
       - id: derived_type
         type: tpi_type_ref16
         doc: 'type index of derived from list if not zero'
+        doc-ref: 'derived'
       - id: vshape_type
         type: tpi_type_ref16
         doc: 'type index of vshape table for this class' 
+        doc-ref: 'vshape'
       - id: struct_size
         type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
+        doc-ref: 'data.size'
       - id: name
         type: pdb_string(true)
         doc: 'class name'
+        doc-ref: 'data.name'
   lf_class:
     params:
       - id: string_prefixed
@@ -800,98 +911,140 @@ types:
       - id: number_of_elements
         type: u2
         doc: 'count of number of elements in class'
+        doc-ref: 'count'
       - id: properties
         type: cv_properties
         doc: 'property attribute field (prop_t)'
+        doc-ref: 'property'
       - id: field_type
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
+        doc-ref: 'field'
       - id: derived_type
         type: tpi_type_ref
         doc: 'type index of derived from list if not zero'
+        doc-ref: 'derived'
       - id: vshape_type
         type: tpi_type_ref
         doc: 'type index of vshape table for this class'
+        doc-ref: 'vshape'
       - id: struct_size
         type: cv_numeric_type
         doc: 'data describing length of structure in bytes'
+        doc-ref: 'data.size'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'class name'
+        doc-ref: 'data.name'
   lf_pointer_attributes_16t:
+    doc-ref: 'lfPointerAttr_16t'
     seq:
       - id: pointer_type
         type: b5
-        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
         enum: tpi::cv_ptrtype
+        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
+        doc-ref: 'ptrtype'
       - id: pointer_mode
         type: b3
-        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
         enum: tpi::cv_ptrmode
+        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
+        doc-ref: 'ptrmode'
       - id: is_flat_32
         type: b1
         doc: 'true if 0:32 pointer'
+        doc-ref: 'isflat32'
       - id: is_volatile
         type: b1
         doc: 'TRUE if volatile pointer'
+        doc-ref: 'isvolatile'
       - id: is_const
         type: b1
         doc: 'TRUE if const pointer'
+        doc-ref: 'isconst'
       - id: is_unaligned
         type: b1
         doc: 'TRUE if unaligned pointer'
+        doc-ref: 'isunaligned'
       - type: b4
+        doc: 'unused'
+        doc-ref: 'unused'
   lf_pointer_attributes:
+    doc-ref: 'lfPointerAttr'
     seq:
       - id: pointer_type
         type: b5
-        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
         enum: tpi::cv_ptrtype
+        doc: 'ordinal specifying pointer type (CV_ptrtype_e)'
+        doc-ref: 'ptrtype'
       - id: pointer_mode
         type: b3
-        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
         enum: tpi::cv_ptrmode
+        doc: 'ordinal specifying pointer mode (CV_ptrmode_e)'
+        doc-ref: 'ptrmode'
       - id: is_flat_32
         type: b1
         doc: 'true if 0:32 pointer'
+        doc-ref: 'isflat32'
       - id: is_volatile
         type: b1
         doc: 'TRUE if volatile pointer'
+        doc-ref: 'isvolatile'
       - id: is_const
         type: b1
         doc: 'TRUE if const pointer'
+        doc-ref: 'isconst'
       - id: is_unaligned
         type: b1
         doc: 'TRUE if unaligned pointer'
+        doc-ref: 'isunaligned'
       - id: is_restricted
         type: b1
         doc: 'TRUE if restricted pointer (allow agressive opts)'
+        doc-ref: 'isrestrict'
       - id: size
         type: b6
         doc: 'size of pointer (in bytes)'
+        doc-ref: 'size'
       - id: is_mocom
         type: b1
         doc: 'TRUE if it is a MoCOM pointer (^ or %)'
+        doc-ref: 'ismocom'
       - id: is_lref
         type: b1
         doc: 'TRUE if it is this pointer of member function with & ref-qualifier'
+        doc-ref: 'islref'
       - id: is_rref
         type: b1
         doc: 'TRUE if it is this pointer of member function with && ref-qualifier'
+        doc-ref: 'isrref'
       - type: b10
+        doc: 'unused'
+        doc-ref: 'unused'
   lf_pointer:
+    doc: 'LF_POINTER'
+    doc-ref: 'lfPointer'
     seq:
       - id: underlying_type
         type: tpi_type_ref
+        doc: 'type index of the underlying type'
+        doc-ref: 'utype'
       - id: attributes
         type: lf_pointer_attributes
+        doc-ref: 'attr'
   lf_pointer_16t:
+    doc: 'LF_POINTER_16t'
+    doc-ref: 'lfPointer_16t'
     seq:
       - id: attributes
         type: lf_pointer_attributes_16t
+        doc-ref: 'attr'
       - id: underlying_type
         type: tpi_type_ref16
+        doc: 'type index of the underlying type'
+        doc-ref: 'utype'
   lf_member:
+    doc: 'LF_MEMBER'
+    doc-ref: 'lfMember'
     params:
       - id: string_prefixed
         type: bool
@@ -899,193 +1052,260 @@ types:
       - id: attributes
         type: cv_field_attributes
         doc: 'attribute mask'
+        doc-ref: 'attr'
       - id: field_type
         type: tpi_type_ref
         doc: 'index of type record for field'
+        doc-ref: 'index'
       - id: offset
         type: cv_numeric_type
         doc: 'variable length offset of field'
+        doc-ref: 'offset'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'length prefixed name of field'
   lf_modifier_flags:
+    doc-ref: 'CV_modifier_t'
     seq:
       - id: const
         type: b1
         doc: 'TRUE if constant'
+        doc-ref: 'MOD_const'
       - id: volatile
         type: b1
         doc: 'TRUE if volatile'
+        doc-ref: 'MOD_volatile'
       - id: unaligned
         type: b1
         doc: 'TRUE if unaligned'
+        doc-ref: 'MOD_unaligned'
       - type: b13
+        doc-ref: 'MOD_unused'
   lf_modifier_16t:
+    doc: 'LF_MODIFIER_16t'
+    doc-ref: 'lfModifier_16t'
     seq:
       - id: flags
         type: lf_modifier_flags
         doc: 'modifier attribute modifier_t'
+        doc-ref: 'attr'
       - id: modified_type
         type: tpi_type_ref16
         doc: 'modified type'
+        doc-ref: 'type'
   lf_modifier:
+    doc: 'LF_MODIFIER'
+    doc-ref: 'lfModifier'
     seq:
       - id: modified_type
         type: tpi_type_ref
         doc: 'modified type'
+        doc-ref: 'type'
       - id: flags
         type: lf_modifier_flags
         doc: 'modifier attribute modifier_t'
+        doc-ref: 'attr'
   lf_mfunction_16t:
+    doc: 'LF_MFUNCTION_16t'
+    doc-ref: 'lfMFunc_16t'
     seq:
       - id: return_type
         type: tpi_type_ref16
         doc: 'type index of return value'
+        doc-ref: 'rvtype'
       - id: class_type
         type: tpi_type_ref16
         doc: 'type index of containing class'
+        doc-ref: 'classtype'
       - id: this_type
         type: tpi_type_ref16
         doc: 'type index of this pointer (model specific)'
+        doc-ref: 'thistype'
       - id: calling_convention
         type: u1
         enum: tpi::calling_convention
         doc: 'calling convention (call_t)'
+        doc-ref: 'calltype'
       - id: attributes
         type: cv_func_attributes
         doc: 'attributes'
+        doc-ref: 'funcattr'
       - id: parameters_count
         type: u2
         doc: 'number of parameters'
+        doc-ref: 'parmcount'
       - id: argument_list_type
         type: tpi_type_ref16
         doc: 'type index of argument list'
+        doc-ref: 'arglist'
       - id: this_adjuster
         type: u4
         doc: 'this adjuster (long because pad required anyway)'
+        doc-ref: 'thisadjust'
   lf_mfunction:
+    doc: 'LF_MFUNCTION'
+    doc-ref: 'lfMFunc'
     seq:
       - id: return_type
         type: tpi_type_ref
         doc: 'type index of return value'
+        doc-ref: 'rvtype'
       - id: class_type
         type: tpi_type_ref
         doc: 'type index of containing class'
+        doc-ref: 'classtype'
       - id: this_type
         type: tpi_type_ref
         doc: 'type index of this pointer (model specific)'
+        doc-ref: 'thistype'
       - id: calling_convention
         type: u1
         enum: tpi::calling_convention
         doc: 'calling convention (call_t)'
+        doc-ref: 'calltype'
       - id: attributes
         type: cv_func_attributes
         doc: 'attributes'
+        doc-ref: 'funcattr'
       - id: parameters_count
         type: u2
         doc: 'number of parameters'
+        doc-ref: 'parmcount'
       - id: argument_list_type
         type: tpi_type_ref
         doc: 'type index of argument list'
+        doc-ref: 'arglist'
       - id: this_adjuster
         type: u4
         doc: 'this adjuster (long because pad required anyway)'
+        doc-ref: 'thisadjust'
   lf_one_method:
+    doc: 'LF_ONEMETHOD'
+    doc-ref: 'lfOneMethod'
     seq:
       - id: attributes
         type: cv_field_attributes
         doc: 'method attribute'
+        doc-ref: 'attr'
       - id: procedure_type
         type: tpi_type_ref
         doc: 'index to type record for procedure'
+        doc-ref: 'index'
       - id: vtable_offset
         if: attributes.method_properties == tpi::cv_methodprop::intro
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
         doc: 'offset in vfunctable if intro virtual'
+        doc-ref: 'vbaseoff'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
         doc: 'length prefixed name of method'
   ml_method_16t:
+    doc-ref: 'mlMethod_16t'
     seq:
       - id: attributes
         type: cv_field_attributes
         doc: 'method attribute'
+        doc-ref: 'attr'
       - id: index_type
         type: tpi_type_ref16
         doc: 'index to type record for procedure'
+        doc-ref: 'index'
       - id: vtable_offset
         if: attributes.method_properties == tpi::cv_methodprop::intro
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
         doc: 'offset in vfunctable if intro virtual'
+        doc-ref: 'vbaseoff'
   ml_method:
+    doc-ref: 'mlMethod'
     seq:
       - id: attributes
         type: cv_field_attributes
         doc: 'method attribute'
+        doc-ref: 'attr'
       - size: 2
+        doc: 'internal padding, must be 0'
+        doc-ref: 'pad0'
       - id: index_type
         type: tpi_type_ref
         doc: 'index to type record for procedure'
+        doc-ref: 'index'
       - id: vtable_offset
         if: attributes.method_properties == tpi::cv_methodprop::intro
           or attributes.method_properties == tpi::cv_methodprop::pure_intro
         type: u4
         doc: 'offset in vfunctable if intro virtual'
+        doc-ref: 'vbaseoff'
   lf_label:
+    doc: 'LF_LABEL'
+    doc-ref: 'lfLabel'
     seq:
       - id: mode
         type: u2
         doc: 'addressing mode of label'
   lf_methodlist_16t:
+    doc-ref: 'lfMethodList_16t'
     seq:
       - id: methods
         type: ml_method_16t
         repeat: eos
   lf_methodlist:
+    doc-ref: 'lfMethodList'
     seq:
       - id: methods
         type: ml_method
         repeat: eos
   lf_procedure_16t:
+    doc-ref: 'lfProc_16t'
     seq:
       - id: return_value_type
         type: tpi_type_ref16
         doc: 'type index of return value'
+        doc-ref: 'rvtype'
       - id: calling_convention
         type: u1
         enum: tpi::calling_convention
         doc: 'calling convention (CV_call_t)'
+        doc-ref: 'calltype'
       - id: function_attributes
         type: cv_func_attributes
         doc: 'attributes'
+        doc-ref: 'funcattr'
       - id: parameter_count
         type: u2
         doc: 'number of parameters'
+        doc-ref: 'parmcount'
       - id: arglist
         type: tpi_type_ref16
         doc: 'type index of argument list'
+        doc-ref: 'arglist'
   lf_procedure:
+    doc-ref: 'lfProc'
     seq:
       - id: return_value_type
         type: tpi_type_ref
         doc: 'type index of return value'
+        doc-ref: 'rvtype'
       - id: calling_convention
         type: u1
         enum: tpi::calling_convention
         doc: 'calling convention (CV_call_t)'
+        doc-ref: 'calltype'
       - id: function_attributes
         type: cv_func_attributes
         doc: 'attributes'
+        doc-ref: 'funcattr'
       - id: parameter_count
         type: u2
         doc: 'number of parameters'
+        doc-ref: 'parmcount'
       - id: arglist
         type: tpi_type_ref
         doc: 'type index of argument list'
+        doc-ref: 'arglist'
   lf_vftable_names:
     seq:
       - id: names
@@ -1094,37 +1314,48 @@ types:
         terminator: 0
         repeat: eos
   lf_vftable:
+    doc-ref: 'lfVftable'
     seq:
       - id: type
         type: tpi_type_ref
         doc: 'class/structure that owns the vftable'
+        doc-ref: 'type'
       - id: base_vftable
         type: tpi_type_ref
         doc: 'vftable from which this vftable is derived'
+        doc-ref: 'baseVftable'
       - id: offset_in_object_layout
         type: u4
         doc: 'offset of the vfptr to this table, relative to the start of the object layout.'
+        doc-ref: 'offsetInObjectLayout'
       - id: len
         type: u4
         doc: 'length of the Names array below in bytes.'
+        doc-ref: 'len'
       - id: zzz_names_block
         size: len
         type: lf_vftable_names
         doc: 'array of names. The first is the name of the vtable. The others are the names of the methods.'
+        doc-ref: 'Names'
     instances:
       names:
         value: zzz_names_block.names
   lf_vtshape:
+    doc-ref: 'lfVTShape'
     seq:
       - id: count
         type: u2
         doc: 'number of entries in vfunctable'
+        doc-ref: 'count'
       - id: descriptors
         type: b4
         enum: tpi::cv_vts_desc
         repeat: expr
         repeat-expr: count
+        doc: '4 bit (CV_VTS_desc) descriptors'
+        doc-ref: 'desc'
   lf_union:
+    doc-ref: 'lfUnion'
     params:
       - id: string_prefixed
         type: bool
@@ -1132,50 +1363,73 @@ types:
       - id: count
         type: u2
         doc: 'count of number of elements in class'
+        doc-ref: 'count'
       - id: property
         type: cv_properties
         doc: 'property attribute field'
+        doc-ref: 'property'
       - id: field
         type: tpi_type_ref
         doc: 'type index of LF_FIELD descriptor list'
+        doc-ref: 'field'
       - id: length
         type: cv_numeric_type
         doc: 'variable length data describing length of structure'
+        doc-ref: 'data.length'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'array name'
+        doc-ref: 'data.name'
   sym_section:
+    doc-ref: 'SECTIONSYM'
     seq:
       - id: section_index
         type: u2
         doc: 'Section number'
+        doc-ref: 'isec'
       - id: section_alignment
         type: u1
         doc: 'Alignment of this section (power of 2)'
+        doc-ref: 'align'
       - id: reserved
         type: u1
         doc: 'Reserved.  Must be zero.'
+        doc-ref: 'bReserved'
       - id: rva
         type: u4
+        doc-ref: 'rva'
       - id: size
         type: u4
+        doc-ref: 'cb'
       - id: characteristics
         type: u4
+        doc-ref: 'characteristics'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
+        doc-ref: 'name'
   sym_function_list:
+    doc-ref: 'FUNCTIONLIST'
     seq:
       - id: count
         type: u4
         doc: 'Number of functions'
+        doc-ref: 'count'
       - id: functions
         type: tpi_type_ref
         repeat: expr
         repeat-expr: count
         doc: 'List of functions, dim == count'
+        doc-ref: 'funcs'
+      - id: invocations  
+        type: u4
+        repeat: expr
+        repeat-expr: count
+        doc: 'array of invocation counts'
+        doc-ref: 'ionvocations'
   sym_reference:
+    doc-ref: 'REFSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -1183,17 +1437,22 @@ types:
       - id: sum_name
         type: u4
         doc: 'SUC of the name'
+        doc-ref: 'sumName'
       - id: symbol_offset
         type: u4
         doc: 'Offset of actual symbol in $$Symbols'
+        doc-ref: 'ibSym'
       - id: module_index
         type: u2
         doc: 'Module containing the actual symbol'
+        doc-ref: 'imod'
       - id: fill
         type: u2
         doc: 'align this record'
+        doc-ref: 'usFill'
       - id: name
         type: pdb_string(string_prefixed)
+        doc-ref: 'name'
   sym_skip:
     seq:
       - size-eos: true
@@ -1606,23 +1865,31 @@ types:
         type: tpi_types
         process: cat(types_data)
   dbi_header_flags:
+    doc-ref: '_flags'
     seq:
       - id: linked_incrementally
         type: b1
         doc: 'true if linked incrmentally (really just if ilink thunks are present)'
+        doc-ref: 'fIncLink'
       - id: stripped
         type: b1
         doc: 'true if PDB::CopyTo stripped the private data out'
+        doc-ref: 'fStripped'
       - id: ctypes
         type: b1
         doc: 'true if this PDB is using CTypes.'
-      - type: b13
+        doc-ref: 'fCTypes'
+      - id: unused
+        type: b13
+        doc: 'reserved, must be 0.'
+        doc-ref: 'unused'
   symbol_records_stream:
     seq:
       - id: symbols
         type: dbi_symbol(-1)
         repeat: eos
   dbi_header_new:
+    doc-ref: 'NewDBIHdr'
     enums:
       version:
         930803: v41
@@ -1633,53 +1900,75 @@ types:
     seq:
       - id: signature
         type: u4
+        doc-ref: 'verSignature'
       - id: version
         type: u4
         enum: version
+        doc-ref: 'verHdr'
       - id: age
         type: u4
+        doc-ref: 'age'
       - id: gs_symbols_stream
         type: pdb_stream_ref
+        doc-ref: 'snGSSyms'
       - id: internal_version
         type: u2
+        doc-ref: 'usVerAll'
       - id: ps_symbols_stream
         type: pdb_stream_ref
+        doc-ref: 'snPSSyms'
       - id: pdb_dll_version
         type: u2
         doc: 'build version of the pdb dll that built this pdb last.'
+        doc-ref: 'usVerPdbDllBuild'
       - id: symbol_records_stream
         type: pdb_stream_ref
+        doc-ref: 'snSymRecs'
       - id: rbld_version
         type: u2
         doc: 'rbld version of the pdb dll that built this pdb last.'
+        doc-ref: 'usVerPdbDllRBld'
       - id: module_list_size
         type: u4
         doc: 'size of rgmodi substream'
+        doc-ref: 'cbGpModi'
       - id: section_contribution_size
         type: u4
         doc: 'size of Section Contribution substream'
+        doc-ref: 'cbSC'
       - id: section_map_size
         type: u4
+        doc-ref: 'cbSecMap'
       - id: file_info_size
         type: u4
+        doc-ref: 'cbFileInfo'
       - id: type_server_map_size
         type: u4
         doc: 'size of the Type Server Map substream'
+        doc-ref: 'cbTSMap'
       - id: mfc_type_server_index
         type: u4
         doc: 'index of MFC type server'
+        doc-ref: 'iMFC'
       - id: debug_header_size
         type: u4
         doc: 'size of optional DbgHdr info appended to the end of the stream'
+        doc-ref: 'cbDbgHdr'
       - id: ec_substream_size
         type: u4
         doc: 'number of bytes in EC substream, or 0 if EC no EC enabled Mods'
+        doc-ref: 'cbECInfo'
       - id: flags
         type: dbi_header_flags
+        doc-ref: 'flags'
       - id: machine_type
         type: u2
+        doc: 'machine type'
+        doc-ref: 'wMachine'
       - id: reserved
         type: u4
+        doc: 'pad out to 64 bytes for future growth.'
+        doc-ref: 'rgulReserved'
     instances:
       symbols_data:
         size: 0
@@ -1697,43 +1986,57 @@ types:
         process: cat(ps_symbols_stream.data)
         type: public_symbols_stream
   section_contrib40:
+    doc-ref: 'SC40'
     seq:
       - id: section_index
         type: u2
+        doc-ref: 'isect'
       - id: pad0
         type: u2
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: size
         type: u4
+        doc-ref: 'cb'
       - id: characteristics
         type: u4
+        doc-ref: 'dwCharacteristics'
       - id: module_index
         type: u2
+        doc-ref: 'imod'
       - id: pad1
         type: u2
   section_contrib:
+    doc-ref: 'SC'
     seq:
       - id: base
         type: section_contrib40
       - id: data_crc
         type: u4
+        doc-ref: 'dwDataCrc'
       - id: reloc_crc
         type: u4
+        doc-ref: 'dwRelocCrc'
   section_contrib2:
+    doc-ref: 'SC2'
     seq:
       - id: base
         type: section_contrib
       - id: coff_section_index
         type: u4
+        doc-ref: 'isectCoff'
   ec_info:
+    doc-ref: 'ECInfo'
     seq:
       - id: src_filename_index
         type: u4
         doc: 'NI for src file name'
+        doc-ref: 'niSrcFile'
       - id: pdb_filename_index
         type: u4
         doc: 'NI for path to compiler PDB'
+        doc-ref: 'niPdbFile'
   align:
     params:
       - id: value
@@ -1744,18 +2047,26 @@ types:
       aligned:
         value: (value + alignment - 1) & ((alignment - 1) ^ -1)
   module_info_flags:
+    doc-ref: 'MODI.flags'
     seq:
       - id: written
         type: b1
         doc: 'TRUE if mod has been written since DBI opened'
+        doc-ref: 'fWritten'
       - id: ec_enabled
         type: b1
         doc: 'TRUE if mod has EC symbolic information'
-      - type: b6
+        doc-ref: 'fECEnabled'
+      - id: unused
+        type: b6
+        doc: 'spare'
+        doc-ref: 'unused'
       - id: tsm_list_index
         type: b8
         doc: 'index into TSM list for this mods server'
+        doc-ref: 'iTSM'
   sym_objname:
+    doc-ref: 'OBJNAMESYM'
     params:
       - id: string_prefixed
         type: bool
@@ -1763,120 +2074,165 @@ types:
       - id: signature
         type: u4
         doc: 'signature'
+        doc-ref: 'signature'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_compile2_flags:
+    doc-ref: 'COMPILESYM.flags'
     seq:
       - id: language
         type: u1
         doc: 'language index'
+        doc-ref: 'iLanguage'
       - id: ec
         type: b1
         doc: 'compiled for E/C'
+        doc-ref: 'fEC'
       - id: no_dbg_info
         type: b1
         doc: 'not compiled with debug info'
+        doc-ref: 'fNoDbgInfo'
       - id: ltcg
         type: b1
         doc: 'compiled with LTCG'
+        doc-ref: 'fLTCG'
       - id: no_data_align
         type: b1
         doc: 'compiled with -Bzalign'
+        doc-ref: 'fNoDataAlign'
       - id: managed_present
         type: b1
         doc: 'managed code/data present'
+        doc-ref: 'fManagedPresent'
       - id: security_checks
         type: b1
         doc: 'compiled with /GS'
+        doc-ref: 'fSecurityChecks'
       - id: hot_patch
         type: b1
         doc: 'compiled with /hotpatch'
+        doc-ref: 'fHotPatch'
       - id: cvt_cil
         type: b1
         doc: 'converted with CVTCIL'
+        doc-ref: 'fCVTCIL'
       - id: msil_module
         type: b1
         doc: 'MSIL netmodule'
-      - type: b15
+        doc-ref: 'fMSILModule'
+      - id: pad
+        type: b15
         doc: 'reserved, must be 0'
+        doc-ref: 'pad'
   sym_compile3_flags:
+    doc-ref: 'COMPILESYM3.flags'
     seq:
       - id: language
         type: u1
         doc: 'language index'
+        doc-ref: 'iLanguage'
       - id: ec
         type: b1
         doc: 'compiled for E/C'
+        doc-ref: 'fEC'
       - id: no_dbg_info
         type: b1
         doc: 'not compiled with debug info'
+        doc-ref: 'fNoDbgInfo'
       - id: ltcg
         type: b1
         doc: 'compiled with LTCG'
+        doc-ref: 'fLTCG'
       - id: no_data_align
         type: b1
         doc: 'compiled with -Bzalign'
+        doc-ref: 'fNoDataAlign'
       - id: managed_present
         type: b1
         doc: 'managed code/data present'
+        doc-ref: 'fManagedPresent'
       - id: security_checks
         type: b1
         doc: 'compiled with /GS'
+        doc-ref: 'fSecurityChecks'
       - id: hot_patch
         type: b1
         doc: 'compiled with /hotpatch'
+        doc-ref: 'fHotPatch'
       - id: cvt_cil
         type: b1
         doc: 'converted with CVTCIL'
+        doc-ref: 'fCVTCIL'
       - id: msil_module
         type: b1
         doc: 'MSIL netmodule'
+        doc-ref: 'fMSILModule'
       - id: sdl
         type: b1
         doc: 'compiled with /sdl'
+        doc-ref: 'fSdl'
       - id: pgo
         type: b1
         doc: 'compiled with /ltcg:pgo or pgu'
+        doc-ref: 'fPGO'
       - id: exp
         type: b1
         doc: '.exp module'
-      - type: b12
+        doc-ref: 'fExp'
+      - id: pad
+        type: b12
+        doc: 'reserved, must be 0'
+        doc-ref: 'pad'
   sym_compile3:
+    doc-ref: 'COMPILESYM3'
     seq:
       - id: flags
         type: sym_compile3_flags
+        doc-ref: 'flags'
       - id: machine
         type: u2
         doc: 'target processor'
+        doc-ref: 'machine'
       - id: ver_fe_major
         type: u2
         doc: 'front end major version #'
+        doc-ref: 'verFEMajor'
       - id: ver_fe_minor
         type: u2
         doc: 'front end minor version #'
+        doc-ref: 'verFEMinor'
       - id: ver_fe_build
         type: u2
         doc: 'front end build version #'
+        doc-ref: 'verFEBuild'
       - id: ver_fe_qfe
         type: u2
         doc: 'front end QFE version #'
+        doc-ref: 'verFEQFE'
       - id: ver_major
         type: u2
         doc: 'back end major version #'
+        doc-ref: 'verMajor'
       - id: ver_minor
         type: u2
         doc: 'back end minor version #'
+        doc-ref: 'verMinor'
       - id: ver_build
         type: u2
         doc: 'back end build version #'
+        doc-ref: 'verBuild'
       - id: ver_qfe
         type: u2
         doc: 'back end QFE version #'
+        doc-ref: 'verQFE'
       - id: version_string
         type: pdb_string(false)
         doc: 'Zero terminated compiler version string'
+        doc-ref: 'verSz'
   sym_compile2:
+    doc-ref: 'COMPILESYM'
     params:
       - id: string_prefixed
         type: bool
@@ -1884,30 +2240,39 @@ types:
       - id: flags
         type: sym_compile2_flags
         doc: 'flags'
+        doc-ref: 'flags'
       - id: machine
         type: u2
         doc: 'target processor'
+        doc-ref: 'machine'
       - id: ver_fe_major
         type: u2
         doc: 'front end major version #'
+        doc-ref: 'verFEMajor'
       - id: ver_fe_minor
         type: u2
         doc: 'front end minor version #'
+        doc-ref: 'verFEMinor'
       - id: ver_fe_build
         type: u2
         doc: 'front end build version #'
+        doc-ref: 'verFEBuild'
       - id: ver_major
         type: u2
         doc: 'back end major version #'
+        doc-ref: 'verMajor'
       - id: ver_minor
         type: u2
         doc: 'back end minor version #'
+        doc-ref: 'verMinor'
       - id: ver_build
         type: u2
         doc: 'back end build version #'
+        doc-ref: 'verBuild'
       - id: version_string
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed compiler version string'
+        doc-ref: 'verSt'
       - id: strings_block
         type: str
         encoding: UTF-8
@@ -1916,38 +2281,50 @@ types:
         repeat-until: _ == ""
         doc: 'an optional block of zero terminated strings, terminated with a double zero.'
   sym_compile:
+    doc-ref: 'CFLAGSYM'
     seq:
       - id: machine
         type: u1
         doc: 'target processor'
+        doc-ref: 'machine'
       - id: language
         type: u1
         doc: 'language index'
+        doc-ref: 'language'
       - id: pcode
         type: b1
         doc: 'true if pcode present'
+        doc-ref: 'pcode'
       - id: floatprec
         type: b2
         doc: 'floating precision'
+        doc-ref: 'floatprec'
       - id: floatpkg
         type: b2
         doc: 'float package'
+        doc-ref: 'floatpkg'
       - id: ambdata
         type: b3
         doc: 'ambient data model'
+        doc-ref: 'ambdata'
       - id: ambcode
         type: b3
         doc: 'ambient code model'
+        doc-ref: 'ambcode'
       - id: mode32
         type: b1
         doc: 'true if compiled 32 bit mode'
+        doc-ref: 'mode32'
       - id: pad
         type: b4
         doc: 'reserved'
+        doc-ref: 'pad'
       - id: version_string
         type: pdb_string(true)
         doc: 'Length-prefixed compiler version string'
+        doc-ref: 'ver'
   sym_constant:
+    doc-ref: 'CONSTSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -1955,13 +2332,17 @@ types:
       - id: type
         type: tpi_type_ref
         doc: 'Type index (containing enum if enumerate) or metadata token'
+        doc-ref: 'typind'
       - id: value
         type: cv_numeric_type
         doc: 'numeric leaf containing value'
+        doc-ref: 'value'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_udt:
+    doc-ref: 'UDTSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -1969,10 +2350,13 @@ types:
       - id: type
         type: tpi_type_ref
         doc: 'Type index'
+        doc-ref: 'typind'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_unamespace:
+    doc-ref: 'UNAMESPACE'
     params:
       - id: string_prefixed
         type: bool
@@ -1980,31 +2364,43 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'name'
+        doc-ref: 'name'
   sym_frame_cookie:
+    doc-ref: 'FRAMECOOKIE'
     seq:
       - id: offset
         type: u4
         doc: 'Frame relative offset'
+        doc-ref: 'off'
       - id: register
         type: u2
         doc: 'Register index'
+        doc-ref: 'reg'
       - id: cookie_type
         type: u1
         enum: tpi::cv_cookietype
         doc: 'Type of the cookie'
+        doc-ref: 'cookietype'
       - id: flags
         type: u1
+        doc: 'Flags describing this cookie'
+        doc-ref: 'flags'
   cv_lvar_attr:
+    doc-ref: 'CV_lvar_attr'
     seq:
       - id: offset
         type: u4
         doc: 'first code address where var is live'
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: flags
         type: cv_local_var_flags
         doc: 'local var flags'
+        doc-ref: 'flags'
   sym_attr_slot:
+    doc-ref: 'ATTRSLOTSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -2012,134 +2408,183 @@ types:
       - id: slot_index
         type: u4
         doc: 'slot index'
+        doc-ref: 'iSlot'
       - id: type
         type: tpi_type_ref
         doc: 'Type index or Metadata token'
+        doc-ref: 'typind'
       - id: attr
         type: cv_lvar_attr
+        doc: 'local var attributes'
+        doc-ref: 'attr'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_annotation:
+    doc-ref: 'ANNOTATIONSYM'
     seq:
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: num_strings
         type: u2
         doc: 'Count of zero terminated annotation strings'
+        doc-ref: 'csz'
       - id: strings
         type: str
         encoding: UTF-8
         terminator: 0
         repeat: expr
         repeat-expr: num_strings
+        doc: 'Sequence of zero terminated annotation strings'
+        doc-ref: 'rgsz'
   sym_frame_proc_flags:
+    doc-ref: 'FRAMEPROCSYM.flags'
     seq:
       - id: has_alloca
         type: b1
         doc: 'function uses _alloca()'
+        doc-ref: 'fHasAlloca'
       - id: has_setjmp
         type: b1
         doc: 'function uses setjmp()'
+        doc-ref: 'fHasSetJmp'
       - id: has_longjmp
         type: b1
         doc: 'function uses longjmp()'
+        doc-ref: 'fHasLongJmp'
       - id: has_inline_asm
         type: b1
         doc: 'function uses inline asm'
+        doc-ref: 'fHasInlAsm'
       - id: has_eh
         type: b1
         doc: 'function has EH states'
+        doc-ref: 'fHasEH'
       - id: inline_spec
         type: b1
         doc: 'function was speced as inline'
+        doc-ref: 'fInlSpec'
       - id: has_seh
         type: b1
         doc: 'function has SEH'
+        doc-ref: 'fHasSEH'
       - id: naked
         type: b1
         doc: 'function is __declspec(naked)'
+        doc-ref: 'fNaked'
       - id: security_checks
         type: b1
         doc: 'function has buffer security check introduced by /GS.'
+        doc-ref: 'fSecurityChecks'
       - id: async_eh
         type: b1
         doc: 'function compiled with /EHa'
+        doc-ref: 'fAsyncEH'
       - id: gs_no_stack_ordering
         type: b1
         doc: 'function has /GS buffer checks, but stack ordering couldn''t be done'
+        doc-ref: 'fGSNoStackOrdering'
       - id: was_inlined
         type: b1
         doc: 'function was inlined within another function'
+        doc-ref: 'fWasInlined'
       - id: gs_check
         type: b1
         doc: 'function is __declspec(strict_gs_check)'
+        doc-ref: 'fGSCheck'
       - id: safe_buffers
         type: b1
         doc: 'function is __declspec(safebuffers)'
+        doc-ref: 'fSafeBuffers'
       - id: encoded_local_base_pointer
         type: b2
         doc: 'record function''s local pointer explicitly.'
+        doc-ref: 'encodedLocalBasePointer'
       - id: encoded_param_base_pointer
         type: b2
         doc: 'record function''s parameter pointer explicitly.'
+        doc-ref: 'encodedParamBasePointer'
       - id: pogo_on
         type: b1
         doc: 'function was compiled with PGO/PGU'
+        doc-ref: 'fPogoOn'
       - id: valid_counts
         type: b1
         doc: 'Do we have valid Pogo counts?'
+        doc-ref: 'fValidCounts'
       - id: opt_speed
         type: b1
         doc: 'Did we optimize for speed?'
+        doc-ref: 'fOptSpeed'
       - id: guard_cf
         type: b1
         doc: 'function contains CFG checks (and no write checks)'
+        doc-ref: 'fGuardCF'
       - id: guard_cfw
         type: b1
         doc: 'function contains CFW checks and/or instrumentation'
+        doc-ref: 'fGuardCFW'
       - id: pad
         type: b9
+        doc: 'must be zero'
+        doc-ref: 'pad'
   sym_frame_proc:
+    doc-ref: 'FRAMEPROCSYM'
     seq:
       - id: frame_size
         type: u4
         doc: 'count of bytes of total frame of procedure'
+        doc-ref: 'cbFrame'
       - id: pad_size
         type: u4
         doc: 'count of bytes of padding in the frame'
+        doc-ref: 'cbPad'
       - id: pad_offset
         type: u4
         doc: 'offset (relative to frame poniter) to where padding starts'
+        doc-ref: 'offPad'
       - id: save_regs_size
         type: u4
         doc: 'count of bytes of callee save registers'
+        doc-ref: 'cbSaveRegs'
       - id: exception_handler_offset
         type: u4
         doc: 'offset of exception handler'
+        doc-ref: 'offExHdlr'
       - id: exception_handler_section
         type: u2
         doc: 'section id of exception handler'
+        doc-ref: 'sectExHdlr'
       - id: flags
         type: sym_frame_proc_flags
+        doc-ref: 'flags'
   sym_label32:
+    doc-ref: 'LABELSYM32'
     params:
       - id: string_prefixed
         type: bool
     seq:
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: flags
         type: cv_proc_flags
         doc: 'flags'
+        doc-ref: 'flags'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_register32:
+    doc-ref: 'REGSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -2147,13 +2592,17 @@ types:
       - id: type
         type: tpi_type_ref
         doc: 'Type index'
+        doc-ref: 'typind'
       - id: register
         type: u2
         doc: 'register enumerate'
+        doc-ref: 'reg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_bprel32:
+    doc-ref: 'BPRELSYM32'
     params:
       - id: string_prefixed
         type: bool
@@ -2161,28 +2610,37 @@ types:
       - id: offset
         type: u4
         doc: 'BP-relative offset'
+        doc-ref: 'off'
       - id: type
         type: tpi_type_ref
         doc: 'Type index or Metadata token'
+        doc-ref: 'typind'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_data32:
+    doc-ref: 'DATASYM32'
     params:
       - id: string_prefixed
         type: bool
     seq:
       - id: type
         type: tpi_type_ref
-        doc: 'Type index'
+        doc: 'Type index, or Metadata token if a managed symbol'
+        doc-ref: 'typind'
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_block32:
+    doc-ref: 'BLOCKSYM32'
     params:
       - id: string_prefixed
         type: bool
@@ -2190,22 +2648,29 @@ types:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the parent'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
       - id: length
         type: u4
         doc: 'Block length'
+        doc-ref: 'len'
       - id: offset
         type: u4
         doc: 'Offset in code segment'
+        doc-ref: 'off'
       - id: segment
         type: u2
         doc: 'segment of label'
+        doc-ref: 'seg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_regrel32:
+    doc-ref: 'REGREL32'
     params:
       - id: string_prefixed
         type: bool
@@ -2213,16 +2678,21 @@ types:
       - id: offset
         type: u4
         doc: 'offset of symbol'
+        doc-ref: 'off'
       - id: type
         type: tpi_type_ref
         doc: 'Type index or metadata token'
+        doc-ref: 'typind'
       - id: register
         type: u2
         doc: 'register index for symbol'
+        doc-ref: 'reg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_thread32:
+    doc-ref: 'THREADSYM32'
     params:
       - id: string_prefixed
         type: bool
@@ -2230,16 +2700,21 @@ types:
       - id: type
         type: tpi_type_ref
         doc: 'type index'
+        doc-ref: 'typind'
       - id: offset
         type: u4
         doc: 'offset into thread storage'
+        doc-ref: 'off'
       - id: segment
         type: u2
         doc: 'segment of thread storage'
+        doc-ref: 'seg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'length prefixed name'
+        doc-ref: 'name'
   sym_manproc:
+    doc-ref: 'MANPROCSYM'
     params:
       - id: string_prefixed
         type: bool
@@ -2247,38 +2722,51 @@ types:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the parent'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
       - id: next
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to next symbol'
+        doc-ref: 'pNext'
       - id: length
         type: u4
         doc: 'Proc length'
+        doc-ref: 'len'
       - id: dbg_start
         type: u4
         doc: 'Debug start offset'
+        doc-ref: 'DbgStart'
       - id: dbg_end
         type: u4
         doc: 'Debug end offset'
+        doc-ref: 'DbgEnd'
       - id: token
         type: u4
         doc: 'COM+ metadata token for method'
+        doc-ref: 'token'
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: flags
         type: cv_proc_flags
         doc: 'Proc flags'
+        doc-ref: 'flags'
       - id: return_register
         type: u2
         doc: 'Register return value is in (may not be used for all archs)'
+        doc-ref: 'retReg'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'optional name field'
+        doc-ref: 'name'
   sym_proc32:
+    doc-ref: 'PROCSYM32'
     params:
       - id: string_prefixed
         type: bool
@@ -2286,53 +2774,71 @@ types:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the parent'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
       - id: next
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to next symbol'
+        doc-ref: 'pNext'
       - id: length
         type: u4
         doc: 'Proc length'
+        doc-ref: 'len'
       - id: dbg_start
         type: u4
         doc: 'Debug start offset'
+        doc-ref: 'DbgStart'
       - id: dbg_end
         type: u4
         doc: 'Debug end offset'
+        doc-ref: 'DbgEnd'
       # FIXME: ID handling
       - id: type
         type: tpi_type_ref
         doc: 'Type index or ID'
+        doc-ref: 'typind'
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: flags
         type: cv_proc_flags
+        doc-ref: 'flags'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
   sym_envblock_flags:
+    doc-ref: 'ENVBLOCKSYM.flags'
     seq:
       - id: rev
         type: b1
         doc: 'reserved'
+        doc-ref: 'rev'
       - id: pad
         type: b7
         doc: 'reserved, must be 0'
+        doc-ref: 'pad'
   sym_envblock:
+    doc-ref: 'ENVBLOCKSYM'
     seq:
       - id: flags
         type: sym_envblock_flags
+        doc-ref: 'flags'
       - id: strings
         type: str
         encoding: UTF-8
         repeat: eos
         terminator: 0
         doc: 'Sequence of zero-terminated strings'
+        doc-ref: 'rgsz'
   sym_thunk32:
+    doc-ref: 'THUNKSYM32'
     params:
       - id: string_prefixed
         type: bool
@@ -2340,215 +2846,292 @@ types:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the parent'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
       - id: next
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to next symbol'
+        doc-ref: 'pNext'
       - id: offset
         type: u4
+        doc-ref: 'off'
       - id: segment
         type: u2
+        doc-ref: 'seg'
       - id: length
         type: u2
         doc: 'length of thunk'
+        doc-ref: 'len'
       - id: ordinal
         type: u1
         doc: 'ordinal specifying type of thunk'
+        doc-ref: 'ord'
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
       # FIXME
       - id: variant
         size-eos: true
+        doc: 'variant portion of thunk'
+        doc-ref: 'variant'
   sym_arm_switch_table:
+    doc-ref: 'ARMSWITCHTABLE'
     seq:
       - id: offset_base
         type: u4
         doc: 'Section-relative offset to the base for switch offsets'
+        doc-ref: 'offsetBase'
       - id: base_section
         type: u2
         doc: 'Section index of the base for switch offsets'
+        doc-ref: 'sectBase'
       - id: switch_type
         type: u2
         doc: 'type of each entry'
+        doc-ref: 'switchType'
       - id: offset_branch
         type: u4
         doc: 'Section-relative offset to the table branch instruction'
+        doc-ref: 'offsetBranch'
       - id: offset_table
         type: u4
         doc: 'Section-relative offset to the start of the table'
+        doc-ref: 'offsetTable'
       - id: branch_section
         type: u2
         doc: 'Section index of the table branch instruction'
+        doc-ref: 'sectBranch'
       - id: table_section
         type: u2
         doc: 'Section index of the table'
+        doc-ref: 'sectTable'
       - id: num_entries 
         type: u4
         doc: 'number of switch table entries'
+        doc-ref: 'cEntries'
   cv_local_var_flags:
+    doc-ref: 'CV_LVARFLAGS'
     seq:
       - id: is_param
         type: b1
         doc: 'variable is a parameter'
+        doc-ref: 'fIsParam'
       - id: addr_taken
         type: b1
         doc: 'address is taken'
+        doc-ref: 'fAddrTaken'
       - id: comp_genx
         type: b1
         doc: 'variable is compiler generated'
+        doc-ref: 'fCompGenx'
       - id: is_aggregate
         type: b1
         doc: 'the symbol is splitted in temporaries, which are treated by compiler as independent entities'
+        doc-ref: 'fIsAggregate'
       - id: is_aggregated
         type: b1
         doc: 'Counterpart of fIsAggregate - tells that it is a part of a fIsAggregate symbol'
+        doc-ref: 'fIsAggregated'
       - id: is_aliased
         type: b1
         doc: 'variable has multiple simultaneous lifetimes'
+        doc-ref: 'fIsAliased'
       - id: is_alias
         type: b1
         doc: 'represents one of the multiple simultaneous lifetimes'
+        doc-ref: 'fIsAlias'
       - id: is_return_value
         type: b1
         doc: 'represents a function return value'
+        doc-ref: 'fIsRetValue'
       - id: is_optimized_out
         type: b1
         doc: 'variable has no lifetimes'
+        doc-ref: 'fIsOptimizedOut'
       - id: is_enregistered_global
         type: b1
         doc: 'variable is an enregistered global'
+        doc-ref: 'fIsEnregGlob'
       - id: is_enregistered_static
         type: b1
         doc: 'variable is an enregistered static'
+        doc-ref: 'fIsEnregStat'
       - id: unused
         type: b5
         doc: 'must be zero'
+        doc-ref: 'unused'
   sym_local:
+    doc-ref: 'LOCALSYM'
     seq:
       - id: type
         type: tpi_type_ref
         doc: 'type index'
+        doc-ref: 'typind'
       - id: flags
         type: cv_local_var_flags
         doc: 'local var flags'
+        doc-ref: 'flags'
   sym_build_info:
+    doc-ref: 'BUILDINFOSYM'
     # FIXME: CV_ItemID (DEBUG_S_CROSSSCOPEIMPORTS)
     seq:
       - id: id
         type: u4
         doc: 'CV_ItemId of Build Info.'
+        doc-ref: 'id'
   sym_heap_alloc_site:
+    doc-ref: 'HEAPALLOCSITE'
     seq:
       - id: off
         type: u4
         doc: 'offset of call site'
+        doc-ref: 'off'
       - id: section
         type: u2
         doc: 'section index of call site'
+        doc-ref: 'sect'
       - id: instruction_size
         type: u2
         doc: 'length of heap allocation call instruction'
+        doc-ref: 'cbInstr'
       - id: type
         type: tpi_type_ref
         doc: 'type index describing function signature'
+        doc-ref: 'typind'
   sym_callsite_info:
+    doc-ref: 'CALLSITEINFO'
     seq:
       - id: offset
         type: u4
         doc: 'offset of call site'
+        doc-ref: 'off'
       - id: section
         type: u2
         doc: 'section index of call site'
+        doc-ref: 'sect'
       - size: 2
         doc: 'alignment padding field, must be zero'
+        doc-ref: '__reserved_0'
       - id: type
         type: tpi_type_ref
         doc: 'type index describing function signature'
+        doc-ref: 'typind'
   sym_file_static:
+    doc-ref: 'FILESTATICSYM'
     seq:
       - id: type
         type: tpi_type_ref
         doc: 'type index'
+        doc-ref: 'typind'
       # TODO: this refers to a string. 
       # the offset is relative to the symbol beginning
       # in the parent module stream
       - id: mod_offset
         type: u4
         doc: 'index of mod filename in stringtable'
+        doc-ref: 'modOffset'
       - id: flags
         type: cv_local_var_flags
         doc: 'local var flags'
+        doc-ref: 'flags'
       - id: name
         type: str
         encoding: UTF-8
         terminator: 0
         doc: 'Name of this symbol, a null terminated array of UTF8 characters'
+        doc-ref: 'name'
   sym_inline_site:
+    doc-ref: 'INLINESITESYM'
     seq:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the inliner'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
       - id: inlinee
         type: u4
         doc: 'CV_ItemId of inlinee' #FIXME
+        doc-ref: 'inlinee'
       - id: binary_annotations #FIXME
         size-eos: true
         doc: 'an array of compressed binary annotations.' 
+        doc-ref: 'binaryAnnotations'
   cv_range_attr:
+    doc-ref: 'CV_RANGEATTR'
     seq:
       - id: maybe
         type: b1
         doc: 'May have no user name on one of control flow path.'
-      - type: b15
+        doc-ref: 'maybe'
+      - id: padding
+        type: b15
         doc: 'Padding for future use.'
+        doc-ref: 'padding'
   cv_lvar_addr_range:
     doc: 'defines a range of addresses'
+    doc-ref: 'CV_LVAR_ADDR_RANGE'
     seq:
       - id: offset_start
         type: u4
+        doc-ref: 'offStart'
       - id: section_start_index
         type: u2
+        doc-ref: 'isectStart'
       - id: range_length
         type: u2 # in bytes
+        doc-ref: 'cbRange'
   cv_lvar_addr_gap:
+    doc-ref: 'CV_LVAR_ADDR_GAP'
     doc: 'Represents the holes in overall address range, all address is pre-bbt. it is for compress and reduce the amount of relocations need.'
     seq:
       - id: gap_start_offset
         type: u2
         doc: 'relative offset from the beginning of the live range.'
+        doc-ref: 'gapStartOffset'
       - id: gap_length
         type: u2
         doc: 'length of this gap.'
+        doc-ref: 'cbRange'
   sym_defrange_register_rel:
+    doc-ref: 'DEFRANGESYMREGISTERREL'
     seq:
       - id: base_register
         type: u2
         doc: 'Register to hold the base pointer of the symbol'
+        doc-ref: 'baseReg'
       - id: spilled_udt_member
         type: b1
         doc: 'Spilled member for s.i.'
+        doc-ref: 'spilledUdtMember'
       - type: b3
         doc: 'Padding for future use.'
+        doc-ref: 'padding'
       - id: offset_member
         type: b12
         doc: 'Offset in parent variable.'
+        doc-ref: 'offsetParent'
       - id: base_pointer_offset
         type: u4
         doc: 'offset to register'
+        doc-ref: 'offBasePointer'
       - id: range
         type: cv_lvar_addr_range
         doc: 'Range of addresses where this program is valid'
+        doc-ref: 'range'
       - id: gaps
         type: cv_lvar_addr_gap
         repeat: eos
         doc: 'The value is not available in following gaps.'
+        doc-ref: 'gaps'
   sym_defrange_register:
+    doc-ref: 'DEFRANGESYMREGISTER'
     seq:
       - id: reg
         type: u2
@@ -2563,154 +3146,207 @@ types:
         type: cv_lvar_addr_gap
         repeat: eos
   sym_defrange_framepointer_rel:
+    doc-ref: 'DEFRANGESYMFRAMEPOINTERREL'
     params:
       - id: full_scope
         type: bool
+        doc-ref: 'DEFRANGESYMFRAMEPOINTERREL_FULL_SCOPE'
     seq:
       - id: frame_pointer_offset
         type: u4
         doc: 'offset to frame pointer'
+        doc-ref: 'offFramePointer'
       - id: range
         if: full_scope == false
         type: cv_lvar_addr_range
         doc: 'Range of addresses where this program is valid'
+        doc-ref: 'range'
       - id: gaps
         if: full_scope == false
         repeat: eos
         type: cv_lvar_addr_gap
         doc: 'The value is not available in following gaps. '
+        doc-ref: 'gaps'
   sym_defrange_subfield_register:
+    doc-ref: 'DEFRANGESYMSUBFIELDREGISTER'
     seq:
       - id: register
         type: u2
         doc: 'Register to hold the value of the symbol'
+        doc-ref: 'reg'
       - id: attr
         type: cv_range_attr
         doc: 'Attribute of the register range.'
+        doc-ref: 'attr'
       - id: parent_offset
         type: b12
         doc: 'Offset in parent variable.'
+        doc-ref: 'offParent'
       - type: b20
         doc: 'Padding for future use.'
+        doc-ref: 'padding'
       - id: range
         type: cv_lvar_addr_range
         doc: 'Range of addresses where this program is valid'
+        doc-ref: 'range'
       - id: gaps
         repeat: eos
         type: cv_lvar_addr_gap
         doc: 'The value is not available in following gaps. '
+        doc-ref: 'gaps'
   sym_coff_group:
+    doc-ref: 'COFFGROUPSYM'
     seq:
       - id: size
         type: u4
         doc: 'cb'
+        doc-ref: 'cb'
       - id: characteristics
         type: u4
+        doc-ref: 'characteristics'
       - id: symbol_offset
         type: u4
         doc: 'Symbol offset'
+        doc-ref: 'off'
       - id: symbol_segment
         type: u2
         doc: 'Symbol segment'
+        doc-ref: 'seg'
       - id: name
         type: pdb_string(false)
         doc: 'name'
+        doc-ref: 'name'
   sym_export:
+    doc-ref: 'EXPORTSYM'
     seq:
       - id: ordinal
         type: u2
+        doc-ref: 'ordinal'
       - id: is_constant
         type: b1
         doc: 'CONSTANT'
+        doc-ref: 'fConstant'
       - id: is_data
         type: b1
         doc: 'DATA'
+        doc-ref: 'fData'
       - id: is_private
         type: b1
         doc: 'PRIVATE'
+        doc-ref: 'fPrivate'
       - id: is_noname
         type: b1
         doc: 'NONAME'
+        doc-ref: 'fNoName'
       - id: is_ordinal
         type: b1
         doc: 'Ordinal was explicitly assigned'
+        doc-ref: 'fOrdinal'
       - id: is_forwarder
         type: b1
         doc: 'This is a forwarder'
-      - type: b10
+        doc-ref: 'fForwarder'
+      - id: reserved
+        type: b10
         doc: 'Reserved. Must be zero.'
+        doc-ref: 'reserved'
       - id: name
         doc: 'name of'
         type: str
         encoding: UTF-8
         terminator: 0
+        doc-ref: 'name'
   sym_trampoline:
+    doc-ref: 'TRAMPOLINESYM'
     seq:
       - id: trampoline_type
         type: u2
         doc: 'trampoline sym subtype'
+        doc-ref: 'trampType'
       - id: thunk_size
         type: u2
         doc: 'size of the thunk'
+        doc-ref: 'cbThunk'
       - id: thunk_offset
         type: u4
         doc: 'offset of the thunk'
+        doc-ref: 'offThunk'
       - id: thunk_target_offset
         type: u4
         doc: 'offset of the target of the thunk'
+        doc-ref: 'offTarget'
       - id: thunk_section_index
         type: u2
         doc: 'section index of the thunk'
+        doc-ref: 'sectThunk'
       - id: thunk_target_section_index
         type: u2
         doc: 'section index of the target of the thunk'
+        doc-ref: 'sectTarget'
   sym_oem:
+    doc-ref: 'OEMSYMBOL'
     seq:
       - id: oem_id
         size: 16
         doc: 'an oem ID (GUID)'
+        doc-ref: 'idOem'
       - id: type
         type: tpi_type_ref
         doc: 'Type index'
+        doc-ref: 'typind'
       - id: user_data
         size-eos: true
         doc: 'user data, force 4-byte alignment'
+        doc-ref: 'rgl'
   cv_sepcode_flags:
+    doc: 'flag bitfields for separated code attributes'
+    doc-ref: 'CV_SEPCODEFLAGS'
     seq:
       - id: is_lexical_scope
         type: b1
         doc: 'S_SEPCODE doubles as lexical scope'
+        doc-ref: 'fIsLexicalScope'
       - id: returns_to_parent
         type: b1
         doc: 'code frag returns to parent'
+        doc-ref: 'fReturnsToParent'
       - id: pad
         type: b30
         doc: 'must be zero'
+        doc-ref: 'pad'
   sym_sepcode:
     seq:
       - id: parent
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to the parent'
+        doc-ref: 'pParent'
       - id: end
         type: dbi_symbol_ref(_parent.module_index)
         doc: 'pointer to this blocks end' 
+        doc-ref: 'pEnd'
       - id: length
         type: u4
         doc: 'count of bytes of this block'
+        doc-ref: 'length'
       - id: scf
         type: cv_sepcode_flags
         doc: 'flags'
+        doc-ref: 'scf'
       - id: offset
         type: u4
         doc: 'sect:off of the separated code'
+        doc-ref: 'off'
       - id: parent_offset
         type: u4
         doc: 'sectParent:offParent of the enclosing scope'
+        doc-ref: 'offParent'
       - id: section
         type: u2
         doc: '(proc, block, or sepcode)'
+        doc-ref: 'sect'
       - id: parent_section
         type: u2
+        doc-ref: 'sectParent'
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -2922,27 +3558,33 @@ types:
       - id: data
         size-eos: true
   c13_column:
-    doc: 'CV_Column_t'
+    doc-ref: 'CV_Column_t'
     seq:
       - id: column_start_offset
         type: u2
+        doc-ref: 'offColumnStart'
       - id: column_end_offset
         type: u2
+        doc-ref: 'offColumnEnd'
   c13_line:
-    doc: 'CV_Line_t'
+    doc-ref: 'CV_Line_t'
     seq:
       - id: offset
         type: u4
         doc: 'Offset to start of code bytes for line number'
+        doc-ref: 'offset'
       - id: linenum_start
         type: b24
         doc: 'line where statement/expression starts'
+        doc-ref: 'linenumStart'
       - id: delta_line_end
         type: b7
         doc: 'delta to line where statement ends (optional)'
+        doc-ref: 'deltaLineEnd'
       - id: is_statement
         type: b1
         doc: 'true if a statement linenumber, else an expression line num'
+        doc-ref: 'fStatement'
     instances:
       is_special_not_step_onto:
         doc: 'The compiler will generate special line numbers like 0xfeefee (not to step onto)'
@@ -3052,26 +3694,43 @@ types:
       padding:
         value: zzz_alignment.aligned - zzz_alignment.value
   c13_inlinee_source_line:
+    doc-ref: 'tagInlineeSourceLine'
     seq:
       - id: inlinee
         type: u4
         doc: 'function id.'
+        doc-ref: 'inlinee'
       - id: file_id
         type: u4
         doc: 'offset into file table DEBUG_S_FILECHKSMS'
+        doc-ref: 'fileId'
       - id: source_line_number
         type: u4
         doc: 'definition start line number.'
+        doc-ref: 'sourceLineNum'
   c13_inlinee_source_line_ex:
+    doc-ref: 'tagInlineeSourceLineEx'
     seq:
-      - id: base
-        type: c13_inlinee_source_line
+      - id: inlinee
+        type: u4
+        doc: 'function id.'
+        doc-ref: 'inlinee'
+      - id: file_id
+        type: u4
+        doc: 'offset into file table DEBUG_S_FILECHKSMS'
+        doc-ref: 'fileId'
+      - id: source_line_number
+        type: u4
+        doc: 'definition start line number.'
+        doc-ref: 'sourceLineNum'
       - id: count_of_extra_files
         type: u4
+        doc-ref: 'countOfExtraFiles'
       - id: extra_file_ids
         type: u4
         repeat: expr
         repeat-expr: count_of_extra_files
+        doc-ref: 'extraFileId'
   c13_subsection_filechecksums:
     doc: 'file checksums'
     seq:
@@ -3105,9 +3764,11 @@ types:
       - id: type
         type: b31
         enum: c13_lines::subsection_type
+        doc: 'DEBUG_S_SUBSECTION_TYPE'
       - id: is_ignored
         type: b1
         doc: 'if this bit is set in a subsection type then ignore the subsection contents'
+        doc-ref: 'DEBUG_S_IGNORE'
       - id: length
         type: u4
       - size: length
@@ -3253,31 +3914,43 @@ types:
         repeat: expr
         repeat-expr: num_segments
   omf_segment_map_descriptor:
+    doc: |
+      OMFSegMap - This table contains the mapping between the logical segment indices
+      used in the symbol table and the physical segments where the program is loaded
+    doc-ref: 'OMFSegMapDesc'
     seq:
       - id: flags
         type: u2
         doc: 'descriptor flags bit field.'
+        doc-ref: 'flags'
       - id: overlay_number
         type: u2
         doc: 'the logical overlay number'
+        doc-ref: 'ovl'
       - id: group_index
         type: u2
         doc: 'group index into the descriptor array'
+        doc-ref: 'group'
       - id: segment_index
         type: u2
         doc: 'logical segment index - interpreted via flags'
+        doc-ref: 'frame'
       - id: segment_name_index
         type: u2
         doc: 'segment or group name - index into sstSegName'
+        doc-ref: 'iSegName'
       - id: class_name_index
         type: u2
         doc: 'class name - index into sstSegName'
+        doc-ref: 'iClassName'
       - id: offset
         type: u4
         doc: 'byte offset of the logical within the physical segment'
+        doc-ref: 'offset'
       - id: size
         type: u4
         doc: 'byte count of the logical segment or group'
+        doc-ref: 'cbSeg'
   file_info_string:
     seq:
       - id: chars_index
@@ -3451,6 +4124,7 @@ types:
         type: image_section_header
         repeat: eos
   fpo_data:
+    doc-ref: 'FPO_DATA'
     enums:
       frame_type:
         0: fpo
@@ -3461,34 +4135,44 @@ types:
       - id: start_offset
         type: u4
         doc: 'offset 1st byte of function code'
+        doc-ref: 'ulOffStart'
       - id: proc_size
         type: u4
         doc: '# bytes in function'
+        doc-ref: 'cbProcSize'
       - id: num_dwords_locals
         type: u4
         doc: '# bytes in locals/4'
+        doc-ref: 'cdwLocals'
       - id: num_dwords_params
         type: u2
         doc: '# bytes in params/4'
+        doc-ref: 'cdwParams'
       - id: prolog_size
         type: u1
         doc: '# bytes in prolog'
+        doc-ref: 'cbProlog'
       - id: regs_size
         type: b3
         doc: '# regs saved'
+        doc-ref: 'cbRegs'
       - id: has_seh
         type: b1
         doc: 'TRUE if SEH in func'
+        doc-ref: 'fHasSEH'
       - id: use_bp
         type: b1
         doc: 'TRUE if EBP has been allocated'
+        doc-ref: 'fUseBP'
       - id: reserved
         type: b1
         doc: 'reserved for future use'
+        doc-ref: 'reserved'
       - id: frame_type
         type: b2
-        doc: 'frame type'
         enum: frame_type
+        doc: 'frame type'
+        doc-ref: 'cbFrame'
   fpo_stream:
     seq:
       - id: items
@@ -3496,17 +4180,21 @@ types:
         type: fpo_data
   # contents of stream #1
   pdb_stream_hdr:
+    doc-ref: 'PDBStream'
     seq:
       - id: implementation_version
         type: u4
         enum: pdb_implementation_version
         doc: 'implementation version number'
+        doc-ref: 'impv'
       - id: sig
         type: u4
         doc: 'unique (across PDB instances) signature'
+        doc-ref: 'sig'
       - id: age
         type: u4
         doc: 'no. of times this instance has been updated'
+        doc-ref: 'age'
   guid:
     seq:
       - id: data1
@@ -3957,19 +4645,28 @@ types:
         pos: 0
         type: s4
   pdb_header_jg:
+    doc: 'page 0'
+    doc-ref: 'MSF_HDR'
     seq:
       - size: 2
       - id: page_size
         type: u4
+        doc: 'page size'
       - id: fpm_page_number
         type: u2
+        doc: 'page no. of valid FPM'
       - id: num_pages
         type: u2
+        doc: 'current no. of pages'
       - id: directory_size
         type: u4
+        doc-ref: 'SI_PERSIST.cb'
       - id: page_map
         type: u4
+        doc-ref: 'SI_PERSIST.mpspnpn'
   pdb_header_jg_old:
+    doc: 'old C8.0 types-only program database header:'
+    doc-ref: 'OHDR'
     seq:
       - size: 2
       - id: pdb_internal_version
