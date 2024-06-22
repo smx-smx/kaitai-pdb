@@ -1424,10 +1424,11 @@ types:
         doc-ref: 'funcs'
       - id: invocations  
         type: u4
-        repeat: expr
-        repeat-expr: count
+        if: (_io.size - _io.pos) >= 4
+        repeat: until
+        repeat-until: _io.eof or (_io.size - _io.pos) < 4
         doc: 'array of invocation counts'
-        doc-ref: 'ionvocations'
+        doc-ref: 'invocations'
   sym_reference:
     doc-ref: 'REFSYM'
     params:
