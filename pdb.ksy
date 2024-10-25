@@ -2584,6 +2584,113 @@ types:
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
         doc-ref: 'name'
+  sym_data_hlsl:
+    doc-ref: 'DATASYMHLSL'
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+        doc-ref: 'typind'
+      - id: reg_type
+        type: u2
+        doc: 'register type from CV_HLSLREG_e'
+        doc-ref: 'regType'
+      - id: data_slot
+        type: u2
+        doc: 'Base data (cbuffer, groupshared, etc.) slot'
+        doc-ref: 'dataslot'
+      - id: data_offset
+        type: u2
+        doc: 'Base data byte offset start'
+        doc-ref: 'dataoff'
+      - id: tex_slot
+        type: u2
+        doc: 'Texture slot start'
+        doc-ref: 'texslot'
+      - id: samp_slot
+        type: u2
+        doc: 'Sampler slot start'
+        doc-ref: 'sampslot'
+      - id: uav_slot
+        type: u2
+        doc: 'UAV slot start'
+        doc-ref: 'uavslot'
+      - id: name
+        type: str
+        terminator: 0
+        encoding: UTF-8
+        doc: 'name'
+        doc-ref: 'name'
+  sym_data_hlsl32:
+    doc-ref: 'DATASYMHLSL32'
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+        doc-ref: 'typind'
+      - id: data_slot
+        type: u4
+        doc: 'Base data (cbuffer, groupshared, etc.) slot'
+        doc-ref: 'dataslot'
+      - id: data_offset
+        type: u4
+        doc: 'Base data byte offset start'
+        doc-ref: 'dataoff'
+      - id: tex_slot
+        type: u4
+        doc: 'Texture slot start'
+        doc-ref: 'texslot'
+      - id: samp_slot
+        type: u4
+        doc: 'Sampler slot start'
+        doc-ref: 'sampslot'
+      - id: uav_slot
+        type: u4
+        doc: 'UAV slot start'
+        doc-ref: 'uavslot'
+      - id: reg_type
+        type: u4
+        doc: 'register type from CV_HLSLREG_e'
+        doc-ref: 'regType'
+      - id: name
+        type: str
+        terminator: 0
+        encoding: UTF-8
+        doc: 'name'
+        doc-ref: 'name'
+  sym_data_hlsl32_ex:
+    doc-ref: 'DATASYMHLSL32_EX'
+    seq:
+      - id: type
+        type: tpi_type_ref
+        doc: 'Type index'
+        doc-ref: 'typind'
+      - id: reg_id
+        type: u4
+        doc: 'Register index'
+        doc-ref: 'regID'
+      - id: data_off
+        type: u4
+        doc: 'Base data byte offset start'
+        doc-ref: 'dataoff'
+      - id: bind_space
+        type: u4
+        doc: 'Binding space'
+        doc-ref: 'bindSpace'
+      - id: bind_slot
+        type: u4
+        doc: 'Lower bound in binding space'
+        doc-ref: 'bindSlot'
+      - id: reg_type
+        type: u2
+        doc: 'register type from CV_HLSLREG_e'
+        doc-ref: 'regType'
+      - id: name
+        type: str
+        terminator: 0
+        encoding: UTF-8
+        doc: 'name'
+        doc-ref: 'name'
   sym_register32:
     doc-ref: 'REGSYM'
     params:
@@ -2639,6 +2746,36 @@ types:
       - id: name
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
+        doc-ref: 'name'
+  sym_with32:
+    doc-ref: 'WITHSYM32'
+    params:
+      - id: string_prefixed
+        type: bool
+    seq:
+      - id: parent
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to the parent'
+        doc-ref: 'pParent'
+      - id: end
+        type: dbi_symbol_ref(_parent.module_index)
+        doc: 'pointer to this blocks end'
+        doc-ref: 'pEnd'
+      - id: length
+        type: u4
+        doc: 'Block length'
+        doc-ref: 'len'
+      - id: offset
+        type: u4
+        doc: 'Offset in code segment'
+        doc-ref: 'off'
+      - id: segment
+        type: u2
+        doc: 'segment of label'
+        doc-ref: 'seg'
+      - id: name
+        type: pdb_string(string_prefixed)
+        doc: 'Length-prefixed expression string'
         doc-ref: 'name'
   sym_block32:
     doc-ref: 'BLOCKSYM32'
@@ -3398,7 +3535,9 @@ types:
             dbi::symbol_type::s_constant: sym_constant(false)
             dbi::symbol_type::s_constant_st: sym_constant(true)
             dbi::symbol_type::s_udt: sym_udt(false)
+            dbi::symbol_type::s_coboludt: sym_udt(false)
             dbi::symbol_type::s_udt_st: sym_udt(true)
+            dbi::symbol_type::s_coboludt_st: sym_udt(true)
             dbi::symbol_type::s_gproc32: sym_proc32(false)
             dbi::symbol_type::s_gproc32_st: sym_proc32(true)
             dbi::symbol_type::s_lproc32: sym_proc32(false)
@@ -3410,6 +3549,8 @@ types:
             dbi::symbol_type::s_register_st: sym_register32(true)
             dbi::symbol_type::s_label32: sym_label32(false)
             dbi::symbol_type::s_label32_st: sym_label32(true)
+            dbi::symbol_type::s_with32: sym_with32(false)
+            dbi::symbol_type::s_with32_st: sym_with32(true)
             dbi::symbol_type::s_ldata32: sym_data32(false)
             dbi::symbol_type::s_ldata32_st: sym_data32(true)
             dbi::symbol_type::s_gdata32: sym_data32(false)
@@ -3466,6 +3607,12 @@ types:
             dbi::symbol_type::s_procref: sym_reference(false)
             dbi::symbol_type::s_dataref: sym_reference(false)
             dbi::symbol_type::s_lprocref: sym_reference(false)
+            dbi::symbol_type::s_gdata_hlsl: sym_data_hlsl
+            dbi::symbol_type::s_ldata_hlsl: sym_data_hlsl
+            dbi::symbol_type::s_gdata_hlsl32: sym_data_hlsl32
+            dbi::symbol_type::s_ldata_hlsl32: sym_data_hlsl32
+            dbi::symbol_type::s_gdata_hlsl32_ex: sym_data_hlsl32_ex
+            dbi::symbol_type::s_ldata_hlsl32_ex: sym_data_hlsl32_ex
             _: sym_unknown
     instances:
       module_index:
