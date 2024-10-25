@@ -109,8 +109,8 @@ types:
         size: page_size
         repeat: expr
         repeat-expr: num_pages
-  pdb_stream_ref:
-    seq:
+  pdb_stream_ref_x:
+    params:
       - id: stream_number
         type: s2
     instances:
@@ -128,6 +128,18 @@ types:
       data:
         if: is_valid_stream
         value: zzz_data.value
+  pdb_stream_ref:
+    seq:
+      - id: stream_number
+        type: s2
+    instances:
+      stream:
+        type: pdb_stream_ref_x(stream_number)
+      size:
+        value: stream.size
+      data:
+        if: stream.is_valid_stream
+        value: stream.zzz_data.value
   pdb_stream_entry_jg:
     doc-ref: 'SI_PERSIST'
     params:
@@ -405,6 +417,10 @@ types:
         io: _parent._io
         pos: offset
         size: size
+  tpi_hash_head_list:
+    seq:
+      - id: name_to_type_index
+        type: pdb_map(sizeof<u4>, sizeof<u4>)
   tpi_hash_data:
     instances:
       hash_values:
@@ -417,6 +433,7 @@ types:
       hash_head_list:
         pos: _parent.hash_head_list_slice.offset
         size: _parent.hash_head_list_slice.size
+        type: tpi_hash_head_list
   tpi_hash:
     doc-ref: 'TpiHash'
     seq:
@@ -4385,6 +4402,14 @@ types:
         if: is_present
         size: _parent.value_size
     instances:
+      key_u4:
+        if: is_present and _parent.key_size == sizeof<u4>
+        pos: 0
+        type: u4
+      value_u4:
+        if: is_present and _parent.value_size == sizeof<u4>
+        pos: sizeof<u4>
+        type: u4
       is_present:
         value: 
           _parent.available_bitset.values.bits[index]
@@ -4405,15 +4430,59 @@ types:
         type: pdb_bitset
       - id: key_value_pairs
         type: pdb_map_kv_pair(_index)
+        size: (key_size + value_size) * (available_bitset.values.bits[_index] ? 1 : 0)
         repeat: expr
         repeat-expr: num_elements
+  string_slice:
+    params:
+      - id: offset
+        type: u4
+    seq:
+      - size: offset
+      - id: value
+        type: str
+        encoding: ascii
+        terminator: 0
+  pdb_named_stream:
+    params:
+      - id: index
+        type: u4
+    instances:
+      item:
+        value: _parent.map.key_value_pairs[index]
+      name_offset:
+        if: item.is_present
+        value: item.key_u4
+      stream_number:
+        if: item.is_present
+        value: item.value_u4
+      name:
+        if: item.is_present
+        type: string_slice(name_offset)
+        size: 0
+        process: cat(_parent._parent.string_table_data.data)
+      stream:
+        type: pdb_stream_ref_x(stream_number.as<s2>)
+  pdb_map_named_streams:
+    seq:
+      - id: map
+        type: pdb_map(sizeof<u4>, sizeof<u4>)
+      - id: named_streams
+        type: pdb_named_stream(_index)
+        repeat: expr
+        repeat-expr: map.num_elements
   name_table_ni:
+    doc: 'NMTNI'
     seq:
       - id: string_table_data
+        doc: 'pbuf'
         type: pdb_buffer
       - id: map_offset_index
-        type: pdb_map(4, 4)
-      - id: max_indices
+        doc: 'mapSzoNi'
+        #type: pdb_map(sizeof<u4>, sizeof<u4>)
+        type: pdb_map_named_streams
+      - id: max_index
+        doc: 'niMac'
         type: u4
   u4_finder:
     params:
