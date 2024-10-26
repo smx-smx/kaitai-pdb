@@ -4230,7 +4230,7 @@ types:
         repeat: eos
         type: name_table_string
   name_table:
-    doc: 'NMT'
+    doc-ref: 'NMT'
     enums:
       version:
         1: hash
@@ -4449,6 +4449,67 @@ types:
         type: str
         encoding: ascii
         terminator: 0
+  link_info:
+    doc-ref: 'LinkInfo'
+    enums:
+      link_info_version:
+        1: vli_one
+        2: vli_two
+    seq:
+      - id: record_size
+        type: u4
+        doc: 'size of the whole record.  computed as sizeof(LinkInfo) + strlen(szCwd) + 1 + strlen(szCommand) + 1'
+        doc-ref: 'cb'
+      - id: version
+        type: u4
+        enum: link_info_version
+        doc: 'version of this record (VerLinkInfo)'
+        doc-ref: 'ver'
+      - id: cwd_offset
+        type: u4
+        doc-ref: 'offszCwd'
+        doc: 'offset from base of this record to szCwd'
+      - id: command_offset
+        type: u4
+        doc-ref: 'offszCommand'
+        doc: 'offset from base of this record'
+      - id: output_file_index
+        type: u4
+        doc-ref: 'ichOutfile'
+        doc: 'index of start of output file in szCommand'
+      - id: libs_offset
+        type: u4
+        doc-ref: 'offszLibs'
+        doc: 'offset from base of this record to szLibs'
+    
+  link_info_stream:
+    seq:
+      - id: header
+        type: link_info
+    instances:
+      cwd:
+        type: str
+        encoding: ascii
+        terminator: 0
+        pos: header.cwd_offset
+      command:
+        type: str
+        encoding: ascii
+        terminator: 0
+        pos: header.command_offset
+      out_file:
+        type: str
+        encoding: ascii
+        terminator: 0
+        pos: header.command_offset + header.output_file_index
+      libs:
+        type: str
+        encoding: ascii
+        terminator: 0
+        pos: header.libs_offset
+  src_header_block_stream:
+    seq:
+      - size: 0
   pdb_named_stream:
     params:
       - id: index
@@ -4469,13 +4530,18 @@ types:
         if: item.is_present
         type: string_slice(name_offset)
         size: 0
-        process: cat(_parent._parent.string_table_data.data)
+        process: cat(_parent._parent.zzz_string_table_data.data)
       stream:
         if: item.is_present
         type: pdb_stream_ref_x(stream_number.as<s2>)
-      name_map_stream:
-        if: item.is_present and name == '/names'
-        type: name_table
+      data:
+        if: item.is_present
+        type:
+          switch-on: name
+          cases:
+            '"/LinkInfo"': link_info_stream
+            '"/src/headerblock"': src_header_block_stream
+            '"/names"': name_table
         size: 0
         process: cat(stream.data)
   pdb_map_named_streams:
@@ -4487,17 +4553,17 @@ types:
         repeat: expr
         repeat-expr: map.num_elements
   name_table_ni:
-    doc: 'NMTNI'
+    doc-ref: 'NMTNI'
     seq:
-      - id: string_table_data
-        doc: 'pbuf'
+      - id: zzz_string_table_data
+        doc-ref: 'pbuf'
         type: pdb_buffer
       - id: map_offset_index
-        doc: 'mapSzoNi'
+        doc-ref: 'mapSzoNi'
         #type: pdb_map(sizeof<u4>, sizeof<u4>)
         type: pdb_map_named_streams
       - id: max_index
-        doc: 'niMac'
+        doc-ref: 'niMac'
         type: u4
   u4_finder:
     params:
