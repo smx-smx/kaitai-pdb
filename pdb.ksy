@@ -4230,6 +4230,7 @@ types:
         repeat: eos
         type: name_table_string
   name_table:
+    doc: 'NMT'
     enums:
       version:
         1: hash
@@ -4238,15 +4239,20 @@ types:
       - id: magic
         #contents: 0xeffeeffe
         contents: [0xfe, 0xef, 0xfe, 0xef]
+        doc: 'verHdr'
       - id: version
         type: u4
         enum: version
+        doc: 'vhT.ulHdr'
       - id: buffer
         type: pdb_buffer
+        doc: 'buf'
       - id: indices
         type: pdb_array(4)
+        doc: 'mphashni'
       - id: num_names
         type: u4
+        doc: 'cni'
     instances:
       strings:
         size: 0
@@ -4458,11 +4464,20 @@ types:
         value: item.value_u4
       name:
         if: item.is_present
+        value: zzz_name.value
+      zzz_name:
+        if: item.is_present
         type: string_slice(name_offset)
         size: 0
         process: cat(_parent._parent.string_table_data.data)
       stream:
+        if: item.is_present
         type: pdb_stream_ref_x(stream_number.as<s2>)
+      name_map_stream:
+        if: item.is_present and name == '/names'
+        type: name_table
+        size: 0
+        process: cat(stream.data)
   pdb_map_named_streams:
     seq:
       - id: map
