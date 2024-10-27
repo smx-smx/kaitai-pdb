@@ -3792,6 +3792,7 @@ types:
         # CV_LINES_HAVE_COLUMNS: 0x1
         value: (flags & 0x1) == 0x1
   c13_subsection_stringtable:
+    doc-ref: 'DEBUG_S_STRINGTABLE'
     seq:
       - id: strings
         type: str
@@ -3799,6 +3800,7 @@ types:
         encoding: UTF-8
         repeat: eos
   c13_frame_data:
+    doc-ref: 'DEBUG_S_FRAMEDATA'
     seq:
       - id: rva_start
         type: u4
@@ -3897,12 +3899,14 @@ types:
         repeat-expr: count_of_extra_files
         doc-ref: 'extraFileId'
   c13_subsection_filechecksums:
+    doc-ref: 'DEBUG_S_FILECHKSMS'
     doc: 'file checksums'
     seq:
       - id: checksums
         type: c13_file_checksum
         repeat: eos
   c13_subsection_inlinee_lines:
+    doc-ref: 'DEBUG_S_INLINEELINES'
     enums:
       signature:
         0: signature
@@ -3920,6 +3924,7 @@ types:
         type: c13_inlinee_source_line_ex
         repeat: eos
   c13_subsection_frame_data:
+    doc-ref: 'DEBUG_S_FRAMEDATA'
     seq:
       - id: frames
         type: c13_frame_data
@@ -3929,7 +3934,7 @@ types:
       - id: type
         type: b31
         enum: c13_lines::subsection_type
-        doc: 'DEBUG_S_SUBSECTION_TYPE'
+        doc-ref: 'DEBUG_S_SUBSECTION_TYPE'
       - id: is_ignored
         type: b1
         doc: 'if this bit is set in a subsection type then ignore the subsection contents'
@@ -4481,7 +4486,7 @@ types:
         type: u4
         doc-ref: 'offszLibs'
         doc: 'offset from base of this record to szLibs'
-    
+      
   link_info_stream:
     seq:
       - id: header
@@ -4536,7 +4541,7 @@ types:
         type: pdb_stream_ref_x(stream_number.as<s2>)
       data:
         if: item.is_present
-        type:
+        type: 
           switch-on: name
           cases:
             '"/LinkInfo"': link_info_stream
