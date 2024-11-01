@@ -4065,7 +4065,7 @@ types:
         doc: 'this module''s first section contribution'
         doc-ref: 'sc'
         type: 
-          switch-on: _root.dbi.section_contributions_version
+          switch-on: _parent._parent._parent.section_contributions_version
           cases:
             pdb::section_contribution_list::version_type::new: section_contrib
             pdb::section_contribution_list::version_type::v60: section_contrib
@@ -4138,7 +4138,7 @@ types:
         type: module_info(index)
     instances:
       is_v50:
-        value: _root.dbi.header_new.version == dbi_header_new::version::v50
+        value: _parent._parent.header_new.version == dbi_header_new::version::v50
       stream_number:
         value: 'is_v50
           ? module50.stream.stream_number
