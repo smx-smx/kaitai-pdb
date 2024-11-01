@@ -3979,6 +3979,7 @@ types:
         type: c13_subsection
         repeat: eos
   module_info:
+    doc-ref: 'MODI'
     params:
       - id: module_index
         type: u4
@@ -3988,36 +3989,55 @@ types:
         if: position_start >= 0
       - id: open_module_handle
         type: u4
+        doc: 'currently open mod'
+        doc-ref: 'pmod'
       - id: section_contribution
+        doc: 'this module''s first section contribution'
+        doc-ref: 'sc'
         type: 
-          switch-on: _root.pdb_type
+          switch-on: _parent._parent.section_contributions_version
           cases:
-            pdb_type::big: section_contrib
-            pdb_type::small: section_contrib40
+            pdb::section_contribution_list::version_type::new: section_contrib
+            pdb::section_contribution_list::version_type::v60: section_contrib
+            _: section_contrib40
       - id: flags
         type: module_info_flags
       - id: stream
+        doc: 'SN of module debug info (syms, lines, fpo), or snNil'
+        doc-ref: 'sn'
         type: pdb_stream_ref
       - id: symbols_size
+        doc: 'size of local symbols debug info in stream sn'
+        doc-ref: 'cbSyms'
         type: u4
       - id: lines_size
+        doc: 'size of line number debug info in stream sn'
+        doc-ref: 'cbLines'
         type: u4
       - id: c13_lines_size
+        doc: 'size of C13 style line number info in stream sn'
+        doc-ref: 'cbC13Lines'
         type: u4
       - id: number_of_files
+        doc: 'number of files contributing to this module'
+        doc-ref: 'ifileMac'
         type: u2
       - id: pad0
         type: u2
       - id: file_names_offsets
+        doc: 'array [0..ifileMac) of offsets into dbi.bufFilenames'
+        doc-ref: 'mpifileichFile'
         type: u4
       - id: ec_info
-        if: _root.pdb_type == pdb_type::big
+        doc-ref: 'ecInfo'
         type: ec_info
       - id: module_name
+        doc-ref: 'rgch.szModule'
         type: str
         encoding: UTF-8
         terminator: 0
       - id: object_filename
+        doc-ref: 'rgch.szObjFile'
         type: str
         encoding: UTF-8
         terminator: 0
@@ -4043,11 +4063,16 @@ types:
   module_list:
     seq:
       - id: modules
-        type: module_info(_index)
+        type: 
+          switch-on: _parent.header_new.version
+          cases:
+            dbi_header_new::version::v70: module_info(_index)
+            dbi_header_new::version::v60: module_info(_index)
         repeat: eos
       - size-eos: true
   section_contribution_list:
     enums:
+      # section contribution version, before V60 there was no section version
       version_type:
         # 0xeffe0000 + 19970605
         0xF12EBA2D: v60
@@ -4128,24 +4153,27 @@ types:
     instances:
       string:
         pos: _parent.strings_start + chars_index
-        type: str
-        encoding: UTF-8
-        terminator: 0
+        type: pdb_string(_root.pdb.has_null_terminated_strings == false)
   file_info:
     seq:
       - id: num_modules
+        doc-ref: 'imodMac'
         type: u2
       - id: num_references
+        doc-ref: 'cRefs'
         type: u2
       - id: module_to_reference
+        doc-ref: 'mpimodiref'
         type: u2
         repeat: expr
         repeat-expr: num_modules
       - id: reference_to_file_index
+        doc-ref: 'mpimodcref'
         type: u2
         repeat: expr
         repeat-expr: num_modules
       - id: filename_indices
+        doc-ref: 'mpirefichFile'
         type: file_info_string
         repeat: expr
         repeat-expr: num_references
@@ -4155,6 +4183,7 @@ types:
     instances:
       strings_start:
         value: _io.pos
+
   type_server_map:
     seq:
       - id: reserved_typemap_handle
@@ -4637,6 +4666,9 @@ types:
         value: _io.pos
       extra_signatures_start:
         value: _io.pos
+      has_null_terminated_strings:
+        doc-ref: 'fIsSZPDB'
+        value: 'header.implementation_version.to_i > pdb_implementation_version::vc98.to_i'
       is_between_vc4_vc140:
         value: 'header.implementation_version.to_i >= pdb_implementation_version::vc4.to_i
           and header.implementation_version.to_i <= pdb_implementation_version::vc140.to_i'
@@ -4659,30 +4691,64 @@ types:
       end_of_hdr:
         value: _io.pos
   debug_data:
+    doc-ref: 'DBGTYPE'
     seq:
       - id: fpo_stream
+        if: have_fpo_stream
         type: pdb_stream_ref
       - id: exception_stream
+        if: have_exception_stream
         type: pdb_stream_ref
       - id: fixup_stream
+        if: have_fixup_stream
         type: pdb_stream_ref
       - id: omap_to_src_stream
+        if: have_omap_to_src_stream
         type: pdb_stream_ref
       - id: omap_from_src_stream
+        if: have_omap_from_src_stream
         type: pdb_stream_ref
       - id: section_hdr_stream
+        if: have_section_hdr_stream
         type: pdb_stream_ref
       - id: token_rid_map_stream
+        if: have_token_rid_map_stream
         type: pdb_stream_ref
       - id: xdata_stream
+        if: have_xdata_stream
         type: pdb_stream_ref
       - id: pdata_stream
+        if: have_pdata_stream
         type: pdb_stream_ref
       - id: new_fpo_stream
+        if: have_new_fpo_stream
         type: pdb_stream_ref
       - id: section_hdr_orig_stream
+        if: have_section_hdr_orig_stream
         type: pdb_stream_ref
     instances:
+      have_fpo_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 1)
+      have_exception_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 2)
+      have_fixup_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 3)
+      have_omap_to_src_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 4)
+      have_omap_from_src_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 5)
+      have_section_hdr_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 6)
+      have_token_rid_map_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 7)
+      have_xdata_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 8)
+      have_pdata_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 9)
+      have_new_fpo_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 10)
+      have_section_hdr_orig_stream:
+        value: _io.size >= (sizeof<pdb_stream_ref> * 11)
       fpo_stream_data:
         if: fpo_stream.stream_number > -1
         size: 0
@@ -4899,6 +4965,9 @@ types:
       - id: header_new
         if: is_new_hdr == true
         type: dbi_header_new
+      - id: invoke_modules_pos
+        if: modules_pos >= 0
+        size: 0
       - id: modules
         if: header_new.module_list_size > 0
         size: 'is_new_hdr ? header_new.module_list_size : header_old.module_list_size'
@@ -4911,7 +4980,6 @@ types:
         size: 'is_new_hdr ? header_new.section_map_size : header_old.section_map_size'
         if: header_new.section_map_size > 0
         type: omf_segment_map
-      ## below portions are only present in DBI new
       - id: file_info
         if: is_new_hdr and header_new.file_info_size > 0
         size: header_new.file_info_size
@@ -4929,6 +4997,13 @@ types:
         size: header_new.debug_header_size
         type: debug_data
     instances:
+      modules_pos:
+        value: _io.pos
+      # lookahead for use within modules reader
+      section_contributions_version:
+        pos: modules_pos + header_new.module_list_size
+        type: u4
+        enum: pdb::section_contribution_list::version_type
       symbols_data:
         value: 'is_new_hdr
           ? header_new.symbols_data
