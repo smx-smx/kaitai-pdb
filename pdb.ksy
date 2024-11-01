@@ -1,5 +1,5 @@
 meta:
-  id: pdb
+  id: ms_pdb
   file-extension: pdb
   endian: le
   bit-endian: le
@@ -276,7 +276,7 @@ types:
   gsi_hdr:
     doc-ref: 'GSIHashHdr'
     enums:
-      version:
+      version_enum:
         # 0xeffe0000 + 19990810
         0xF12F091A: v70
     seq:
@@ -285,7 +285,7 @@ types:
         doc-ref: 'verSignature'
       - id: version
         type: u4
-        enum: version
+        enum: version_enum
         doc-ref: 'verHdr'
       - id: size_hash_records
         type: u4
@@ -323,7 +323,7 @@ types:
       # FIXME: uncompressed hash_records have varying size based on "m_fMinimalDbgInfo"
     instances:
       has_compressed_buckets:
-        value: header.signature == 0xFFFFFFFF and header.version == gsi_hdr::version::v70
+        value: header.signature == 0xFFFFFFFF and header.version == gsi_hdr::version_enum::v70
       header:
         pos: 0
         type: gsi_hdr
@@ -385,7 +385,7 @@ types:
         if: has_next_block
         value: _parent.items[(index+1).as<s4>]
       block_end:
-        value: 'has_next_block == true ? next_block.type_index : _root.tpi.max_type_index'
+        value: 'has_next_block == true ? next_block.type_index : _root.tpi_stream.max_type_index'
       block_length:
         value: block_end - type_index
   ti_offset_list:
@@ -3530,7 +3530,7 @@ types:
         type: u4
     instances:
       value:
-        value: _root.dbi.modules.modules[module_index].module_data.symbols._io
+        value: _root.dbi_stream.modules.modules[module_index].module_data.symbols._io
   dbi_symbol_data:
     params:
       - id: length
@@ -4067,8 +4067,8 @@ types:
         type: 
           switch-on: _parent._parent._parent.section_contributions_version
           cases:
-            pdb::section_contribution_list::version_type::new: section_contrib
-            pdb::section_contribution_list::version_type::v60: section_contrib
+            section_contribution_list::version_type::new: section_contrib
+            section_contribution_list::version_type::v60: section_contrib
             _: section_contrib40
       - id: flags
         type: module_info_flags
@@ -4253,7 +4253,7 @@ types:
     instances:
       string:
         pos: _parent.strings_start + chars_index
-        type: pdb_string(_root.pdb.has_null_terminated_strings == false)
+        type: pdb_string(_root.pdb_stream.has_null_terminated_strings == false)
   file_info:
     seq:
       - id: num_modules
@@ -5116,7 +5116,7 @@ types:
       section_contributions_version:
         pos: modules_pos + header_new.module_list_size
         type: u4
-        enum: pdb::section_contribution_list::version_type
+        enum: section_contribution_list::version_type
       symbols_data:
         value: 'is_new_hdr
           ? header_new.symbols_data
@@ -5298,24 +5298,24 @@ instances:
   min_type_index:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.header.min_ti
-      : tpi.min_type_index'
+      : tpi_stream.min_type_index'
   max_type_index:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.header.max_ti
-      : tpi.max_type_index'
+      : tpi_stream.max_type_index'
   types:
     value: 'pdb_type == pdb_type::old
       ? pdb_jg_old.types
-      : tpi.types.types'
-  pdb:
+      : tpi_stream.types.types'
+  pdb_stream:
     size: 0
     type: pdb_stream
     process: cat(zzz_pdb_data.value)
-  tpi:
+  tpi_stream:
     size: 0
     type: tpi
     process: cat(zzz_tpi_data.value)
-  dbi:
+  dbi_stream:
     size: 0
     type: dbi
     if: zzz_dbi_data.has_data
