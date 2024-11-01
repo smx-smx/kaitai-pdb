@@ -2071,6 +2071,7 @@ types:
         type: b1
         doc: 'TRUE if mod has been written since DBI opened'
         doc-ref: 'fWritten'
+      # note: ec_enabled is not defined for MODI50
       - id: ec_enabled
         type: b1
         doc: 'TRUE if mod has EC symbolic information'
@@ -3978,6 +3979,75 @@ types:
       - id: subsection
         type: c13_subsection
         repeat: eos
+  module_info50:
+    doc-ref: 'MODI50'
+    params:
+      - id: module_index
+        type: u4
+    seq:
+      - id: invoke_position_start
+        size: 0
+        if: position_start >= 0
+      - id: open_module_handle
+        type: u4
+        doc: 'currently open mod'
+        doc-ref: 'pmod'
+      - id: section_contribution
+        doc: 'this module''s first section contribution'
+        doc-ref: 'sc'
+        type: section_contrib40
+      - id: flags
+        type: module_info_flags
+      - id: stream
+        doc: 'SN of module debug info (syms, lines, fpo), or snNil'
+        doc-ref: 'sn'
+        type: pdb_stream_ref
+      - id: symbols_size
+        doc: 'size of local symbols debug info in stream sn'
+        doc-ref: 'cbSyms'
+        type: u4
+      - id: lines_size
+        doc: 'size of line number debug info in stream sn'
+        doc-ref: 'cbLines'
+        type: u4
+      - id: fpo_size
+        doc: 'size of frame pointer opt debug info in stream sn'
+        doc-ref: 'cbFpo'
+        type: u4
+      - id: number_of_files
+        doc: 'number of files contributing to this module'
+        doc-ref: 'ifileMac'
+        type: u2
+      - id: pad0
+        type: u2
+      - id: file_names_offsets
+        doc: 'array [0..ifileMac) of offsets into dbi.bufFilenames'
+        doc-ref: 'mpifileichFile'
+        type: u4
+      - id: module_name
+        doc-ref: 'rgch.szModule'
+        type: str
+        encoding: UTF-8
+        terminator: 0
+      - id: object_filename
+        doc-ref: 'rgch.szObjFile'
+        type: str
+        encoding: UTF-8
+        terminator: 0
+      - id: invoke_position_end
+        size: 0
+        if: position_end >= 0
+      - id: padding
+        size: padding_size
+    instances:
+      padding_size:
+        value: alignment.aligned - position_end
+      alignment:
+        type: align(position_end, 4)
+      position_start:
+        value: _io.pos
+      position_end:
+        value: _io.pos
   module_info:
     doc-ref: 'MODI'
     params:
@@ -3995,7 +4065,7 @@ types:
         doc: 'this module''s first section contribution'
         doc-ref: 'sc'
         type: 
-          switch-on: _parent._parent.section_contributions_version
+          switch-on: _root.dbi.section_contributions_version
           cases:
             pdb::section_contribution_list::version_type::new: section_contrib
             pdb::section_contribution_list::version_type::v60: section_contrib
@@ -4047,11 +4117,6 @@ types:
       - id: padding
         size: padding_size
     instances:
-      module_data:
-          size: 0
-          if: stream.stream_number > -1
-          process: cat(stream.data)
-          type: module_stream(module_index)
       padding_size:
         value: alignment.aligned - position_end
       alignment:
@@ -4060,14 +4125,49 @@ types:
         value: _io.pos
       position_end:
         value: _io.pos
+  u_module_info:
+    params:
+      - id: index
+        type: u4
+    seq:
+      - id: module50
+        if: is_v50
+        type: module_info50(index)
+      - id: module
+        if: is_v50 == false
+        type: module_info(index)
+    instances:
+      is_v50:
+        value: _root.dbi.header_new.version == dbi_header_new::version::v50
+      stream_number:
+        value: 'is_v50
+          ? module50.stream.stream_number
+          : module.stream.stream_number'
+      stream_data:
+        value: 'is_v50
+          ? module50.stream.data
+          : module.stream.data'
+      lines_size:
+        value: 'is_v50
+          ? module50.lines_size
+          : module.lines_size'
+      c13_lines_size:
+        value: 'is_v50
+          ? 0
+          : module.c13_lines_size'
+      symbols_size:
+        value: 'is_v50
+          ? module50.symbols_size
+          : module.symbols_size'
+      module_data:
+        size: 0
+        if: stream_number > -1
+        process: cat(stream_data)
+        type: module_stream(index)
   module_list:
     seq:
       - id: modules
-        type: 
-          switch-on: _parent.header_new.version
-          cases:
-            dbi_header_new::version::v70: module_info(_index)
-            dbi_header_new::version::v60: module_info(_index)
+        type: u_module_info(_index)
         repeat: eos
       - size-eos: true
   section_contribution_list:
