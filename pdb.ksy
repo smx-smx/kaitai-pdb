@@ -4393,35 +4393,48 @@ types:
         process: cat(indices.data)
         type: name_table_strings
   image_section_header:
+    doc-ref: 'IMAGE_SECTION_HEADER'
     seq:
       - id: name
+        doc-ref: 'Name'
         size: 8
         type: str
         pad-right: 0
         encoding: UTF-8
       - id: misc
+        doc-ref: 'Misc'
         type: u4
       - id: virtual_address
+        doc-ref: 'VirtualAddress'
         type: u4
       - id: size_of_raw_data
+        doc-ref: 'SizeOfRawData'
         type: u4
       - id: pointer_to_raw_data
+        doc-ref: 'PointerToRawData'
         type: u4
       - id: pointer_to_relocations
+        doc-ref: 'PointerToRelocations'
         type: u4
       - id: pointer_to_line_numbers
+        doc-ref: 'PointerToLinenumbers'
         type: u4
       - id: number_of_relocations
+        doc-ref: 'NumberOfRelocations'
         type: u2
       - id: number_of_line_numbers
+        doc-ref: 'NumberOfLinenumbers'
         type: u2
       - id: characteristics
+        doc-ref: 'Characteristics'
         type: u4
     instances:
       # TODO: automatic discrimination/if
       physical_address:
+        doc-ref: 'Misc.PhysicalAddress'
         value: misc
       virtual_size:
+        doc-ref: 'Misc.VirtualSize'
         value: misc
   debug_section_hdr_stream:
     seq:
@@ -5148,23 +5161,36 @@ types:
     seq:
       - size: 2
       - id: pdb_internal_version
+        doc-ref: 'vers'
+        doc: 'version which created this file'
         type: u4
         enum: pdb_version
       - id: timestamp
+        doc-ref: 'sig'
+        doc: 'signature'
         type: u4
       - id: age
+        doc-ref: 'age'
+        doc: 'age (no. of times written)'
         type: u4
       - id: min_ti
+        doc-ref: 'tiMin'
+        doc: 'lowest TI'
         type: u2
       - id: max_ti
+        doc-ref: 'tiMac'
+        doc: 'highest TI + 1'
         type: u2
       - id: gp_rec_size
+        doc: 'count of bytes used by the gprec which follows.'
+        doc-ref: 'cb'
         type: u4
   pdb_jg_old:
     seq:
       - id: header
         type: pdb_header_jg_old
       - id: types
+        doc-ref: 'OHDR.gprec'
         repeat: eos
         type: tpi_type(header.min_ti + _index)
   pdb_jg:
