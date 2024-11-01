@@ -119,12 +119,12 @@ types:
         value: stream_number > -1 and stream_number < _root.num_streams
       zzz_size:
         if: is_valid_stream
-        type: get_stream_size(stream_number)
+        type: get_stream_size(stream_number.as<u4>)
       size:
         value: 'is_valid_stream ? zzz_size.value : 0'
       zzz_data:
         if: is_valid_stream
-        type: get_stream_data(stream_number)
+        type: get_stream_data(stream_number.as<u4>)
       data:
         if: is_valid_stream
         value: zzz_data.value
@@ -152,7 +152,7 @@ types:
         type: u4
     instances:
       zzz_num_directory_pages:
-        type: get_num_pages(stream_size)
+        type: get_num_pages(stream_size.as<u4>)
       num_directory_pages:
         value: zzz_num_directory_pages.num_pages
   pdb_stream_entry_ds:
@@ -165,7 +165,7 @@ types:
         type: s4
     instances:
       zzz_num_directory_pages:
-        type: get_num_pages(stream_size)
+        type: get_num_pages(stream_size.as<u4>)
       num_directory_pages:
         value: '(stream_size < 0) ? 0 : zzz_num_directory_pages.num_pages'
   pdb_stream_data:
@@ -182,7 +182,7 @@ types:
         type: u4
     seq:
       - id: pages
-        type: pdb_page_number_list(num_directory_pages)
+        type: pdb_page_number_list(num_directory_pages.as<u4>)
     instances:
       data:
         value: zzz_pages.data
@@ -196,8 +196,8 @@ types:
         value: stream_size > 0
       num_directory_pages:
         value: '_root.pdb_type == pdb_type::big
-          ? _parent.stream_sizes_ds[stream_number].num_directory_pages
-          : _parent.stream_sizes_jg[stream_number].num_directory_pages'
+          ? _parent.stream_sizes_ds[stream_number.as<s4>].num_directory_pages
+          : _parent.stream_sizes_jg[stream_number.as<s4>].num_directory_pages'
       stream_size:
         value: zzz_stream_size.value
   get_stream_num_pages:
@@ -207,8 +207,8 @@ types:
     instances:
       value:
         value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number].num_directory_pages
-          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number].num_directory_pages'
+          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number.as<s4>].num_directory_pages
+          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number.as<s4>].num_directory_pages'
   get_stream_data:
     params:
       - id: stream_number
@@ -242,11 +242,11 @@ types:
         repeat-expr: num_streams
       - id: stream_sizes_jg
         if: _root.pdb_type == pdb_type::small
-        type: pdb_stream_entry_jg(_index)
+        type: pdb_stream_entry_jg(_index.as<u4>)
         repeat: expr
         repeat-expr: num_streams
       - id: streams
-        type: pdb_stream_pagelist(_index)
+        type: pdb_stream_pagelist(_index.as<u4>)
         repeat: expr
         repeat-expr: num_streams
   psgi_header:
@@ -383,7 +383,7 @@ types:
         value: index + 1 < _parent.num_items
       next_block:
         if: has_next_block
-        value: _parent.items[index+1]
+        value: _parent.items[(index+1).as<s4>]
       block_end:
         value: 'has_next_block == true ? next_block.type_index : _root.tpi.max_type_index'
       block_length:
@@ -394,7 +394,7 @@ types:
         size: 0
         if: items_start >= 0
       - id: items
-        type: ti_offset(_index)
+        type: ti_offset(_index.as<u4>)
         repeat: eos
       - id: invoke_items_end
         size: 0
@@ -879,7 +879,7 @@ types:
         if: is_prefixed
         type: str
         encoding: UTF-8
-        size: name_length
+        size: name_length.as<s4>
       - id: name_cstring
         if: not is_prefixed
         type: str
@@ -1580,7 +1580,7 @@ types:
     instances:
       types:
         pos: 0
-        type: tpi_type(_root.min_type_index + _index)
+        type: tpi_type((_root.min_type_index + _index).as<u4>)
         repeat: eos
   tpi:
     enums:
@@ -1904,7 +1904,7 @@ types:
   symbol_records_stream:
     seq:
       - id: symbols
-        type: dbi_symbol(-1)
+        type: dbi_symbol((-1).as<u4>)
         repeat: eos
   dbi_header_new:
     doc-ref: 'NewDBIHdr'
@@ -3651,7 +3651,7 @@ types:
           or type == dbi::symbol_type::s_lprocref_st'
       zzz_procref_alignment:
         if: is_procref_st
-        type: align(procref_data.name.name_length + 1, 4)
+        type: align(procref_data.name.name_length.as<u4> + 1, 4)
       alignment:
         value: 'is_procref_st
           ? zzz_procref_alignment.value : 0'
@@ -3682,7 +3682,7 @@ types:
       data:
         pos: data_pos
         size: actual_length
-        type: dbi_symbol_data(actual_length)
+        type: dbi_symbol_data(actual_length.as<u2>)
         if: length > 0
   module_symbols:
     params:
@@ -3858,7 +3858,7 @@ types:
       end_pos:
         value: _io.pos
       zzz_alignment:
-        type: align(end_pos - start_pos, 4)
+        type: align((end_pos - start_pos).as<u4>, 4)
       padding:
         value: zzz_alignment.aligned - zzz_alignment.value
   c13_inlinee_source_line:
@@ -4043,7 +4043,7 @@ types:
       padding_size:
         value: alignment.aligned - position_end
       alignment:
-        type: align(position_end, 4)
+        type: align(position_end.as<u4>, 4)
       position_start:
         value: _io.pos
       position_end:
@@ -4120,7 +4120,7 @@ types:
       padding_size:
         value: alignment.aligned - position_end
       alignment:
-        type: align(position_end, 4)
+        type: align(position_end.as<u4>, 4)
       position_start:
         value: _io.pos
       position_end:
@@ -4167,7 +4167,7 @@ types:
   module_list:
     seq:
       - id: modules
-        type: u_module_info(_index)
+        type: u_module_info(_index.as<u4>)
         repeat: eos
       - size-eos: true
   section_contribution_list:
@@ -4308,7 +4308,7 @@ types:
       padding_size:
         value: alignment.aligned - position_end
       alignment:
-        type: align(position_end, 4)
+        type: align(position_end.as<u4>, 4)
       position_end:
         value: _io.pos
   type_server_map_list:
@@ -4565,7 +4565,7 @@ types:
         type: u4
       is_present:
         value: 
-          _parent.available_bitset.values.bits[index]
+          _parent.available_bitset.values.bits[index.as<s4>]
   pdb_map:
     params:
       - id: key_size
@@ -4582,7 +4582,7 @@ types:
       - id: deleted_bitset
         type: pdb_bitset
       - id: key_value_pairs
-        type: pdb_map_kv_pair(_index)
+        type: pdb_map_kv_pair(_index.as<u4>)
         size: '(key_size + value_size) * (available_bitset.values.bits[_index] ? 1 : 0)'
         repeat: expr
         repeat-expr: num_elements
@@ -4663,7 +4663,7 @@ types:
         type: u4
     instances:
       item:
-        value: _parent.map.key_value_pairs[index]
+        value: _parent.map.key_value_pairs[index.as<s4>]
       name_offset:
         if: item.is_present
         value: item.key_u4
@@ -4675,7 +4675,7 @@ types:
         value: zzz_name.value
       zzz_name:
         if: item.is_present
-        type: string_slice(name_offset)
+        type: string_slice(name_offset.as<u4>)
         size: 0
         process: cat(_parent._parent.zzz_string_table_data.data)
       stream:
@@ -4696,7 +4696,7 @@ types:
       - id: map
         type: pdb_map(sizeof<u4>, sizeof<u4>)
       - id: named_streams
-        type: pdb_named_stream(_index)
+        type: pdb_named_stream(_index.as<u4>)
         repeat: expr
         repeat-expr: map.num_elements
   name_table_ni:
@@ -5192,13 +5192,13 @@ types:
       - id: types
         doc-ref: 'OHDR.gprec'
         repeat: eos
-        type: tpi_type(header.min_ti + _index)
+        type: tpi_type((header.min_ti + _index).as<u4>)
   pdb_jg:
     seq:
       - id: header
         type: pdb_header_jg
       - id: stream_table_pages
-        type: pdb_page_number_list(num_stream_table_pages)
+        type: pdb_page_number_list(num_stream_table_pages.as<u4>)
         size: header.page_size * num_stream_table_pages
     instances:
       zzz_num_stream_table_pages:
@@ -5214,7 +5214,7 @@ types:
       - id: header
         type: pdb_header_ds
       - id: stream_table_root_pagelist_data
-        type: pdb_pagelist(num_stream_table_pagelist_pages, header.page_size)
+        type: pdb_pagelist(num_stream_table_pagelist_pages.as<u4>, header.page_size)
         size: header.page_size * num_stream_table_pagelist_pages
     instances:
       zzz_num_stream_table_pages:
@@ -5226,7 +5226,7 @@ types:
         value:
           num_stream_table_pages * sizeof<u4>
       zzz_num_stream_table_pagelist_pages:
-        type: get_num_pages2(stream_table_page_list_size, header.page_size)
+        type: get_num_pages2(stream_table_page_list_size.as<u4>, header.page_size)
       # number of pages required for the list of pages (u4 * num_pages)
       num_stream_table_pagelist_pages:
         value: zzz_num_stream_table_pagelist_pages.num_pages
@@ -5242,7 +5242,7 @@ types:
       stream_table_pages:
         size: 0
         process: concat_pages(stream_table_root_pages)
-        type: pdb_page_number_list(num_stream_table_pages)
+        type: pdb_page_number_list(num_stream_table_pages.as<u4>)
       stream_table:
         size: 0
         process: concat_pages(stream_table_pages.pages)
@@ -5284,11 +5284,11 @@ instances:
       : pdb_type == pdb_type::small 
       ? pdb_jg.stream_table.num_streams : 0'
   zzz_pdb_data:
-    type: get_stream_data(default_stream::pdb.to_i)
+    type: get_stream_data(default_stream::pdb.to_i.as<u4>)
   zzz_tpi_data:
-    type: get_stream_data(default_stream::tpi.to_i)
+    type: get_stream_data(default_stream::tpi.to_i.as<u4>)
   zzz_dbi_data:
-    type: get_stream_data(default_stream::dbi.to_i)
+    type: get_stream_data(default_stream::dbi.to_i.as<u4>)
   stream_table:
     if: pdb_type == pdb_type::big or pdb_type == pdb_type::small
     value: 'pdb_type == pdb_type::big 
