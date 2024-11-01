@@ -4470,7 +4470,7 @@ types:
         type: pdb_bitset
       - id: key_value_pairs
         type: pdb_map_kv_pair(_index)
-        size: (key_size + value_size) * (available_bitset.values.bits[_index] ? 1 : 0)
+        size: '(key_size + value_size) * (available_bitset.values.bits[_index] ? 1 : 0)'
         repeat: expr
         repeat-expr: num_elements
   string_slice:
