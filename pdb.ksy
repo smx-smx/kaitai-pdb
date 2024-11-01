@@ -886,7 +886,7 @@ types:
         encoding: UTF-8
         terminator: 0
     instances:
-      name:
+      value:
         value: 'is_prefixed ? name_prefixed : name_cstring'
   lf_class_16t:
     doc: 'LF_CLASS_16t, LF_STRUCT_16t'
@@ -3530,7 +3530,7 @@ types:
         type: u4
     instances:
       value:
-        value: _root.dbi_stream.modules.modules[module_index.as<s4>].module_data.symbols._io
+        value: _root.dbi_stream.modules_list.items[module_index.as<s4>].module_data.symbols_list._io
   dbi_symbol_data:
     params:
       - id: length
@@ -3689,7 +3689,7 @@ types:
       - id: module_index
         type: u4
     instances:
-      symbols:
+      items:
         pos: 0
         type: dbi_symbol(module_index.as<s4>)
         repeat: eos
@@ -3707,7 +3707,7 @@ types:
       - id: signature
         type: u4
         enum: cv_signature
-      - id: symbols
+      - id: symbols_list
         if: symbols_size > 0
         size: symbols_size
         type: module_symbols(module_index)
@@ -4166,7 +4166,7 @@ types:
         type: module_stream(index)
   module_list:
     seq:
-      - id: modules
+      - id: items
         type: u_module_info(_index.as<u4>)
         repeat: eos
       - size-eos: true
@@ -5076,7 +5076,7 @@ types:
       - id: invoke_modules_pos
         if: modules_pos >= 0
         size: 0
-      - id: modules
+      - id: modules_list
         if: header_new.module_list_size > 0
         size: 'is_new_hdr ? header_new.module_list_size : header_old.module_list_size'
         type: module_list

@@ -3,7 +3,7 @@
  * @author Stefano Moioli <smxdev4@gmail.com>
  */
 
-namespace Pdb {
+namespace MsPdb {
 	class Concat {
 		private $blocks;
 		public function __construct($items){

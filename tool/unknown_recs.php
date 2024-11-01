@@ -5,23 +5,23 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/../pdb.php';
 
 // path to generated
-require_once __DIR__ . '/out/Pdb.php';
+require_once __DIR__ . '/out/MsPdb.php';
 
 function get_methods($x){
 	return array_map(fn($x) => $x->getName(), (new ReflectionClass($x))->getMethods());
 }
 
-$lfTypes = array_flip((new ReflectionClass('\Pdb\Tpi\LeafType'))->getConstants());
-$symTypes = array_flip((new ReflectionClass('\Pdb\Dbi\SymbolType'))->getConstants());
+$lfTypes = array_flip((new ReflectionClass('\MsPdb\Tpi\LeafType'))->getConstants());
+$symTypes = array_flip((new ReflectionClass('\MsPdb\Dbi\SymbolType'))->getConstants());
 
 if($argc < 2){
 	fwrite(STDERR, "Usage: {$argv[0]} <file.pdb>\n");
 	exit(1);
 }
 
-/** @var \Pdb */
+/** @var \MsPdb */
 print("... parsing ... ");
-$pdb = Pdb::fromFile($argv[1]);
+$pdb = MsPdb::fromFile($argv[1]);
 print("DONE!\n");
 
 $debug = getenv('DEBUG') === '1';
@@ -96,7 +96,7 @@ $handleSym = function($s, array $iModMac, array $iSymMac) use($symTypes, $debug,
 if($doSyms){
 	do {
 		print("\n... loading symbol records ... ");
-		$dbi = $pdb->dbi();
+		$dbi = $pdb->dbiStream();
 		if($dbi === null) break;
 		$sd = $dbi->symbolsData();
 		print("DONE!\n");
@@ -109,18 +109,18 @@ if($doSyms){
 
 	do {
 		print("\n... loading symbols ... ");
-		$dbi = $pdb->dbi();
+		$dbi = $pdb->dbiStream();
 		if($dbi === null) break;
-		$mods = $dbi->modules()->modules();
+		$mods = $dbi->modulesList()->items();
 		print("DONE!\n");
 		$n_mods = count($mods);
 		foreach($mods as $i => $m){
 			$md = $m->moduleData();
 			if($md === null) continue;
-			$sd = $md->symbols();
+			$sd = $md->symbolsList();
 			if($sd === null) continue;
 
-			$syms = $sd->symbols();
+			$syms = $sd->items();
 			$n_syms = count($syms);
 			foreach($syms as $j => $s){
 				$handleSym($s, [$i, $n_mods], [$j, $n_syms]);
