@@ -195,7 +195,7 @@ types:
       has_data:
         value: stream_size > 0
       num_directory_pages:
-        value: '_root.pdb_type == pdb_type::big
+        value: '_root.pdb_type == pdb_type_enum::big
           ? _parent.stream_sizes_ds[stream_number.as<s4>].num_directory_pages
           : _parent.stream_sizes_jg[stream_number.as<s4>].num_directory_pages'
       stream_size:
@@ -206,7 +206,7 @@ types:
         type: u4
     instances:
       value:
-        value: '_root.pdb_type == pdb_type::big
+        value: '_root.pdb_type == pdb_type_enum::big
           ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number.as<s4>].num_directory_pages
           : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number.as<s4>].num_directory_pages'
   get_stream_data:
@@ -215,33 +215,33 @@ types:
         type: u4
     instances:
       has_data:
-        value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.streams[stream_number].has_data
-          : _root.pdb_jg.stream_table.streams[stream_number].has_data'
+        value: '_root.pdb_type == pdb_type_enum::big
+          ? _root.pdb_ds.stream_table.streams[stream_number.as<s4>].has_data
+          : _root.pdb_jg.stream_table.streams[stream_number.as<s4>].has_data'
       value:
-        value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.streams[stream_number].data
-          : _root.pdb_jg.stream_table.streams[stream_number].data'
+        value: '_root.pdb_type == pdb_type_enum::big
+          ? _root.pdb_ds.stream_table.streams[stream_number.as<s4>].data
+          : _root.pdb_jg.stream_table.streams[stream_number.as<s4>].data'
   get_stream_size:
     params:
       - id: stream_number
         type: u4
     instances:
       value:
-        value: '_root.pdb_type == pdb_type::big
-          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number].stream_size
-          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number].stream_size'
+        value: '_root.pdb_type == pdb_type_enum::big
+          ? _root.pdb_ds.stream_table.stream_sizes_ds[stream_number.as<s4>].stream_size.as<s4>
+          : _root.pdb_jg.stream_table.stream_sizes_jg[stream_number.as<s4>].stream_size.as<s4>'
   pdb_stream_table:
     seq:
       - id: num_streams
         type: u4
       - id: stream_sizes_ds
-        if: _root.pdb_type == pdb_type::big
+        if: _root.pdb_type == pdb_type_enum::big
         type: pdb_stream_entry_ds(_index)
         repeat: expr
         repeat-expr: num_streams
       - id: stream_sizes_jg
-        if: _root.pdb_type == pdb_type::small
+        if: _root.pdb_type == pdb_type_enum::small
         type: pdb_stream_entry_jg(_index.as<u4>)
         repeat: expr
         repeat-expr: num_streams
@@ -1546,8 +1546,8 @@ types:
         pos: end_body_pos
         type: u1
       has_padding:
-        value: trailing_byte >= tpi::leaf_type::lf_pad1.to_i
-          and trailing_byte <= tpi::leaf_type::lf_pad15.to_i
+        value: trailing_byte >= tpi::leaf_type::lf_pad1.to_i.as<u1>
+          and trailing_byte <= tpi::leaf_type::lf_pad15.to_i.as<u1>
       padding_size:
         value: 'has_padding ? trailing_byte & 0xF : 0'
       end_body_pos:
@@ -1558,7 +1558,7 @@ types:
         type: u4
     seq:
       - id: hash
-        if: _root.pdb_type == pdb_type::old
+        if: _root.pdb_type == pdb_type_enum::old
         type: u2
       - id: length
         type: u2
@@ -1904,12 +1904,12 @@ types:
   symbol_records_stream:
     seq:
       - id: symbols
-        type: dbi_symbol((-1).as<u4>)
+        type: dbi_symbol(-1)
         repeat: eos
   dbi_header_new:
     doc-ref: 'NewDBIHdr'
     enums:
-      version:
+      version_enum:
         930803: v41
         19960307: v50
         19970606: v60
@@ -1921,7 +1921,7 @@ types:
         doc-ref: 'verSignature'
       - id: version
         type: u4
-        enum: version
+        enum: version_enum
         doc-ref: 'verHdr'
       - id: age
         type: u4
@@ -2772,11 +2772,11 @@ types:
         type: bool
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: length
@@ -2802,11 +2802,11 @@ types:
         type: bool
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: length
@@ -2876,15 +2876,15 @@ types:
         type: bool
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: next
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to next symbol'
         doc-ref: 'pNext'
       - id: length
@@ -2928,15 +2928,15 @@ types:
         type: bool
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: next
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to next symbol'
         doc-ref: 'pNext'
       - id: length
@@ -3000,15 +3000,15 @@ types:
         type: bool
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: next
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to next symbol'
         doc-ref: 'pNext'
       - id: offset
@@ -3204,11 +3204,11 @@ types:
     doc-ref: 'INLINESITESYM'
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the inliner'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end'
         doc-ref: 'pEnd'
       - id: inlinee
@@ -3473,11 +3473,11 @@ types:
   sym_sepcode:
     seq:
       - id: parent
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to the parent'
         doc-ref: 'pParent'
       - id: end
-        type: dbi_symbol_ref(_parent.module_index)
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
         doc: 'pointer to this blocks end' 
         doc-ref: 'pEnd'
       - id: length
@@ -3523,14 +3523,14 @@ types:
         if: is_offset_eof == false
         # go before length field
         pos: offset
-        type: dbi_symbol(module_index)
+        type: dbi_symbol(module_index.as<s4>)
   get_module_io:
     params:
       - id: module_index
         type: u4
     instances:
       value:
-        value: _root.dbi_stream.modules.modules[module_index].module_data.symbols._io
+        value: _root.dbi_stream.modules.modules[module_index.as<s4>].module_data.symbols._io
   dbi_symbol_data:
     params:
       - id: length
@@ -3662,7 +3662,7 @@ types:
   dbi_symbol:
     params:
       - id: module_index
-        type: u4
+        type: s4
     seq:
       - id: length
         type: u2
@@ -3691,7 +3691,7 @@ types:
     instances:
       symbols:
         pos: 0
-        type: dbi_symbol(module_index)
+        type: dbi_symbol(module_index.as<s4>)
         repeat: eos
   module_stream:
     params:
@@ -3829,7 +3829,7 @@ types:
         type: b29
   c13_file_checksum:
     enums:
-      checksum_type:
+      checksum_type_enum:
         0: none
         1: md5
         2: sha1
@@ -3844,7 +3844,7 @@ types:
         type: u1
       - id: checksum_type
         type: u1
-        enum: checksum_type
+        enum: checksum_type_enum
       - id: checksum_data
         size: checksum_size
       - id: invoke_end_pos
@@ -3909,19 +3909,19 @@ types:
   c13_subsection_inlinee_lines:
     doc-ref: 'DEBUG_S_INLINEELINES'
     enums:
-      signature:
+      signature_enum:
         0: signature
         1: signature_ex
     seq:
       - id: signature
         type: u4
-        enum: signature
+        enum: signature_enum
       - id: lines
-        if: signature == signature::signature
+        if: signature == signature_enum::signature
         type: c13_inlinee_source_line
         repeat: eos
       - id: lines_ex
-        if: signature == signature::signature_ex
+        if: signature == signature_enum::signature_ex
         type: c13_inlinee_source_line_ex
         repeat: eos
   c13_subsection_frame_data:
@@ -4138,7 +4138,7 @@ types:
         type: module_info(index)
     instances:
       is_v50:
-        value: _parent._parent.header_new.version == dbi_header_new::version::v50
+        value: _parent._parent.header_new.version == dbi_header_new::version_enum::v50
       stream_number:
         value: 'is_v50
           ? module50.stream.stream_number
@@ -4253,7 +4253,7 @@ types:
     instances:
       string:
         pos: _parent.strings_start + chars_index
-        type: pdb_string(_root.pdb_stream.has_null_terminated_strings == false)
+        type: pdb_string(_root.pdb_root_stream.has_null_terminated_strings == false)
   file_info:
     seq:
       - id: num_modules
@@ -4311,11 +4311,6 @@ types:
         type: align(position_end.as<u4>, 4)
       position_end:
         value: _io.pos
-  type_server_map_list:
-    seq:
-      - id: items
-        type: type_server_map
-        repeat: eos
   pdb_array:
     params:
       - id: element_size
@@ -4366,7 +4361,7 @@ types:
   name_table:
     doc-ref: 'NMT'
     enums:
-      version:
+      version_enum:
         1: hash
         2: hash_v2
     seq:
@@ -4376,7 +4371,7 @@ types:
         doc: 'verHdr'
       - id: version
         type: u4
-        enum: version
+        enum: version_enum
         doc: 'vhT.ulHdr'
       - id: buffer
         type: pdb_buffer
@@ -4444,7 +4439,7 @@ types:
   fpo_data:
     doc-ref: 'FPO_DATA'
     enums:
-      frame_type:
+      frame_type_enum:
         0: fpo
         1: trap
         2: tss
@@ -4488,7 +4483,7 @@ types:
         doc-ref: 'reserved'
       - id: frame_type
         type: b2
-        enum: frame_type
+        enum: frame_type_enum
         doc: 'frame type'
         doc-ref: 'cbFrame'
   fpo_stream:
@@ -4750,12 +4745,12 @@ types:
         pos: extra_signatures_start
         if: extra_signatures_count > 0
         size: extra_signatures_size
-        type: u4_finder(pdb_implementation_version::vc110.to_i)
+        type: u4_finder(pdb_implementation_version::vc110.to_i.as<u4>)
       zzz_find_vc140:
         pos: extra_signatures_start
         if: extra_signatures_count > 0
         size: extra_signatures_size
-        type: u4_finder(pdb_implementation_version::vc140.to_i)
+        type: u4_finder(pdb_implementation_version::vc140.to_i.as<u4>)
       zzz_find_no_type_merge:
         pos: extra_signatures_start
         if: extra_signatures_count > 0
@@ -4798,7 +4793,7 @@ types:
       is_minimal_dbg_info_pdb:
         value: '(extra_signatures_count > 0) ? zzz_find_minimal_dbg_info.found : false'
       zzz_stream_size:
-        type: get_stream_size(default_stream::pdb.to_i)
+        type: get_stream_size(default_stream::pdb.to_i.as<u4>)
       stream_size:
         value: zzz_stream_size.value
       end_of_hdr:
@@ -5185,7 +5180,7 @@ types:
         doc: 'count of bytes used by the gprec which follows.'
         doc-ref: 'cb'
         type: u4
-  pdb_jg_old:
+  pdb_jg_old_root:
     seq:
       - id: header
         type: pdb_header_jg_old
@@ -5193,7 +5188,7 @@ types:
         doc-ref: 'OHDR.gprec'
         repeat: eos
         type: tpi_type((header.min_ti + _index).as<u4>)
-  pdb_jg:
+  pdb_jg_root:
     seq:
       - id: header
         type: pdb_header_jg
@@ -5209,7 +5204,7 @@ types:
         size: 0
         process: concat_pages(stream_table_pages.pages)
         type: pdb_stream_table
-  pdb_ds:
+  pdb_ds_root:
     seq:
       - id: header
         type: pdb_header_ds
@@ -5252,36 +5247,36 @@ seq:
     type: pdb_signature
   - id: pdb_ds
     if: signature.id == "DS"
-    type: pdb_ds
+    type: pdb_ds_root
   - id: pdb_jg
     if: signature.id == "JG" and signature.version_major == "2"
-    type: pdb_jg
+    type: pdb_jg_root
   - id: pdb_jg_old
     if: signature.id == "JG" and signature.version_major == "1"
-    type: pdb_jg_old
+    type: pdb_jg_old_root
 instances:
   page_number_size:
-    value: 'pdb_type == pdb_type::big ? 4 : 2'
+    value: 'pdb_type == pdb_type_enum::big ? 4 : 2'
   page_size_ds:
-    if: pdb_type == pdb_type::big
+    if: pdb_type == pdb_type_enum::big
     value: pdb_ds.header.page_size
   page_size_jg:
-    if: pdb_type == pdb_type::small
+    if: pdb_type == pdb_type_enum::small
     value: pdb_jg.header.page_size
   page_size:
-    value: 'pdb_type == pdb_type::big ? page_size_ds
-      : pdb_type == pdb_type::small ? page_size_jg
+    value: 'pdb_type == pdb_type_enum::big ? page_size_ds
+      : pdb_type == pdb_type_enum::small ? page_size_jg
       : 0'
   pdb_type:
     value: '_root.signature.id == "DS"
-      ? pdb_type::big 
+      ? pdb_type_enum::big 
       : (_root.signature.id == "JG" and _root.signature.version_major == "2")
-      ? pdb_type::small
-      : pdb_type::old'
+      ? pdb_type_enum::small
+      : pdb_type_enum::old'
   num_streams:
-    value: 'pdb_type == pdb_type::big
+    value: 'pdb_type == pdb_type_enum::big
       ? pdb_ds.stream_table.num_streams
-      : pdb_type == pdb_type::small 
+      : pdb_type == pdb_type_enum::small 
       ? pdb_jg.stream_table.num_streams : 0'
   zzz_pdb_data:
     type: get_stream_data(default_stream::pdb.to_i.as<u4>)
@@ -5290,24 +5285,24 @@ instances:
   zzz_dbi_data:
     type: get_stream_data(default_stream::dbi.to_i.as<u4>)
   stream_table:
-    if: pdb_type == pdb_type::big or pdb_type == pdb_type::small
-    value: 'pdb_type == pdb_type::big 
+    if: pdb_type == pdb_type_enum::big or pdb_type == pdb_type_enum::small
+    value: 'pdb_type == pdb_type_enum::big 
           ? _root.pdb_ds.stream_table
           : _root.pdb_jg.stream_table'
   
   min_type_index:
-    value: 'pdb_type == pdb_type::old
+    value: 'pdb_type == pdb_type_enum::old
       ? pdb_jg_old.header.min_ti
       : tpi_stream.min_type_index'
   max_type_index:
-    value: 'pdb_type == pdb_type::old
+    value: 'pdb_type == pdb_type_enum::old
       ? pdb_jg_old.header.max_ti
       : tpi_stream.max_type_index'
   types:
-    value: 'pdb_type == pdb_type::old
+    value: 'pdb_type == pdb_type_enum::old
       ? pdb_jg_old.types
       : tpi_stream.types.types'
-  pdb_stream:
+  pdb_root_stream:
     size: 0
     type: pdb_stream
     process: cat(zzz_pdb_data.value)
@@ -5322,7 +5317,7 @@ instances:
     process: cat(zzz_dbi_data.value)
 enums:
   # pseudo-enum to keep track of the PDB type
-  pdb_type:
+  pdb_type_enum:
     0: old
     1: small
     2: big
