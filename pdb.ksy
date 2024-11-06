@@ -2062,6 +2062,8 @@ types:
       - id: alignment
         type: u4
     instances:
+      padding_size:
+        value: aligned - value
       aligned:
         value: (value + alignment - 1) & ((alignment - 1) ^ -1)
   module_info_flags:
@@ -3712,8 +3714,11 @@ types:
         size: symbols_size
         type: module_symbols(module_index)
       - id: lines
+        if: _parent.lines_size > 0
         size: _parent.lines_size
+        type: c11_lines
       - id: c13_lines
+        if: _parent.c13_lines_size > 0
         size: _parent.c13_lines_size
         type: c13_lines
     instances:
@@ -3958,6 +3963,138 @@ types:
             c13_lines::subsection_type::inlinee_lines: c13_subsection_inlinee_lines
             c13_lines::subsection_type::frame_data: c13_subsection_frame_data
             _: c13_subsection_ignore
+  c11_srcfile:
+    doc-ref: SrcFile
+    seq:
+      - id: seg_pad_base
+        type: c11_linebuffer_seg_pad_base
+      - id: start_end
+        repeat: expr
+        repeat-expr: seg_pad_base.num_segments
+        type: c11_linebuffer_start_end
+      - id: filename
+        doc-ref: szFile
+        ### Microsoft BUG:
+        # SrcFile::Construct reads this as an ST
+        # but SrcFile::Emit writes it as an SZ!
+        # assume it depends on the PDB version
+        type: pdb_string(_root.pdb_root_stream.has_null_terminated_strings == false)
+      - id: invoke_align_marker
+        if: align_marker >= 0
+        size: 0
+      - size: padding_size
+      - id: section_info
+        type: c11_section_info2
+        repeat: expr
+        repeat-expr: seg_pad_base.num_segments
+    instances:
+      align_marker:
+        value: _io.pos
+      zzz_align_size:
+        type: align(align_marker, 4)
+      padding_size:
+        value: zzz_align_size.padding_size
+  c11_linebuffer_start_end:
+    doc-ref: SE
+    seq:
+      - id: start
+        type: u4
+        doc-ref: start
+      - id: end
+        type: u4
+        doc-ref: end
+  c11_linebuffer_seg_pad_base:
+    doc-ref: SPB
+    seq:
+      - id: num_segments
+        doc-ref: cSeg
+        type: u2
+      - id: pad
+        doc-ref: pad
+        type: u2
+      - id: base_source_len
+        doc-ref: baseSrcLn
+        type: u4
+        repeat: expr
+        repeat-expr: num_segments
+  c11_line_info:
+    params:
+      - id: line_number
+        type: u2
+        doc-ref: line
+      - id: offset
+        type: u4
+        doc-ref: offset
+  c11_section_info2:
+    doc-ref: 'rest of SectInfo'
+    seq:
+      - id: section_index
+        type: u2
+        doc-ref: isect
+      - id: num_pairs
+        type: u2
+        doc-ref: cPair
+      - id: line_offsets
+        type: u4
+        repeat: expr
+        repeat-expr: num_pairs
+      - id: line_numbers
+        type: u2
+        repeat: expr
+        repeat-expr: num_pairs
+      - id: pad
+        if: '(num_pairs % 2) != 0'
+        type: u2
+    instances:
+      lines:
+        type: c11_line_info(line_numbers[_index], line_offsets[_index])
+        repeat: expr
+        repeat-expr: num_pairs
+  c11_section_info:
+    doc-ref: SectInfo
+    seq:
+      - id: offset_min
+        doc-ref: offMin
+        type: u4
+      - id: offset_max
+        doc-ref: offMax
+        type: u4
+      - id: section_index
+        doc-ref: isect
+        type: u2
+  c11_lines:
+    doc-ref: MLI
+    seq:
+      - id: num_files
+        doc-ref: cfiles
+        type: u2
+      - id: num_sections
+        doc-ref: csect
+        type: u2
+      - id: file_offsets
+        type: u4
+        repeat: expr
+        repeat-expr: num_files
+      - id: sections_info
+        type: c11_section_info
+        repeat: expr
+        repeat-expr: num_sections
+      - id: invoke_align_marker
+        if: align_marker >= 0
+        size: 0
+      - size: padding_size
+        doc-ref: offFile
+      - id: src_files
+        type: c11_srcfile
+        repeat: expr
+        repeat-expr: num_files
+    instances:
+      align_marker:
+        value: _io.pos
+      zzz_align_size:
+        type: align(align_marker, sizeof<u4>)
+      padding_size:
+        value: zzz_align_size.padding_size
   c13_lines:
     enums:
       subsection_type:
