@@ -4815,7 +4815,7 @@ types:
         if: item.is_present
         type: pdb_stream_ref_x(stream_number.as<s2>)
       data:
-        if: item.is_present
+        if: item.is_present and stream.size > 0
         type: 
           switch-on: name
           cases:
