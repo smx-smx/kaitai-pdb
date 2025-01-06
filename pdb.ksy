@@ -3523,8 +3523,8 @@ types:
       symbol:
         io: module_io
         if: is_offset_eof == false
-        # go before length field
-        pos: offset
+        # go before length field (subtract 4 for the module signature)
+        pos: offset - sizeof<u4>
         type: dbi_symbol(module_index.as<s4>)
   get_module_io:
     params:
