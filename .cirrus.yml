@@ -9,3 +9,7 @@ linux_x64_task:
   compile_php_script:
     - mkdir -p gen/php && cd gen/php && 
       kaitai-struct-compiler -t php --opaque-types true ../../pdb.ksy
+
+  compile_dotnet_script:
+    - cd pdbtool && ./gen.sh
+    - dotnet build -c Debug
