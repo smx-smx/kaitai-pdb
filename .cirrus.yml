@@ -1,0 +1,11 @@
+env:
+  CIRRUS_CLONE_DEPTH: 1
+  PATH: $PATH:/opt/kaitai-struct-compiler-0.10/bin
+
+linux_x64_task:
+  container:
+    dockerfile: .ci/linux_x64/Dockerfile
+    
+  compile_php_script:
+    - mkdir -p gen/php && cd gen/php && 
+      kaitai-struct-compiler -t php --opaque-types true ../../pdb.ksy
