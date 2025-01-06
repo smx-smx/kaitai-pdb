@@ -3522,7 +3522,8 @@ types:
         value: offset >= module_io.size
       symbol:
         io: module_io
-        if: is_offset_eof == false
+        # make sure offset is valid
+        if: is_offset_eof == false and offset > sizeof<u4>
         # go before length field (subtract 4 for the module signature)
         pos: offset - sizeof<u4>
         type: dbi_symbol(module_index.as<s4>)
