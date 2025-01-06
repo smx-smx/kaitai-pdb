@@ -424,13 +424,16 @@ types:
   tpi_hash_data:
     instances:
       hash_values:
+        if: _parent.hash_values_slice.size > 0
         pos: _parent.hash_values_slice.offset
         size: _parent.hash_values_slice.size
       ti_offset_list:
+        if: _parent.type_offsets_slice.size > 0
         type: ti_offset_list
         pos: _parent.type_offsets_slice.offset
         size: _parent.type_offsets_slice.size
       hash_head_list:
+        if: _parent.hash_head_list_slice.size > 0
         pos: _parent.hash_head_list_slice.offset
         size: _parent.hash_head_list_slice.size
         type: tpi_hash_head_list
