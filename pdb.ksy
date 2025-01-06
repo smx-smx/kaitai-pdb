@@ -3991,7 +3991,7 @@ types:
       align_marker:
         value: _io.pos
       zzz_align_size:
-        type: align(align_marker, 4)
+        type: align(align_marker.as<u4>, 4)
       padding_size:
         value: zzz_align_size.padding_size
   c11_linebuffer_start_end:
@@ -4092,7 +4092,7 @@ types:
       align_marker:
         value: _io.pos
       zzz_align_size:
-        type: align(align_marker, sizeof<u4>)
+        type: align(align_marker.as<u4>, sizeof<u4>)
       padding_size:
         value: zzz_align_size.padding_size
   c13_lines:
