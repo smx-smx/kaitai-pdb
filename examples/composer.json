@@ -1,0 +1,24 @@
+{
+    "name": "smx/kaitai-pdb-examples",
+    "autoload": {
+        "psr-4": {
+            "Smx\\Pdb\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Stefano Moioli",
+            "email": "smxdev4@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/smx-smx/ksdump-php.git"
+        }
+    ],
+    "require": {
+        "smx/ksdump-php": "dev-main",
+        "kaitai-io/kaitai_struct_php_runtime": "dev-master#e21bc2a3824f1a2b37588c191596b67cb4ba03ba"
+    }
+}

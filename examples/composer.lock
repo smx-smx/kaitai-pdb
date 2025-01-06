@@ -1,0 +1,102 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "60a74b543c5697688b75ddfdd133ff12",
+    "packages": [
+        {
+            "name": "kaitai-io/kaitai_struct_php_runtime",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kaitai-io/kaitai_struct_php_runtime.git",
+                "reference": "e21bc2a3824f1a2b37588c191596b67cb4ba03ba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kaitai-io/kaitai_struct_php_runtime/zipball/e21bc2a3824f1a2b37588c191596b67cb4ba03ba",
+                "reference": "e21bc2a3824f1a2b37588c191596b67cb4ba03ba",
+                "shasum": ""
+            },
+            "require": {
+                "ext-iconv": "*",
+                "php": "^7.1 || ^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0 || ^8.0"
+            },
+            "suggest": {
+                "ext-zlib": "for `process: zlib` support"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Kaitai\\": "lib/Kaitai"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Kaitai Struct: runtime library for PHP",
+            "homepage": "https://github.com/kaitai-io/kaitai_struct_php_runtime",
+            "support": {
+                "chat": "https://gitter.im/kaitai_struct/Lobby",
+                "issues": "https://github.com/kaitai-io/kaitai_struct_php_runtime/issues",
+                "source": "https://github.com/kaitai-io/kaitai_struct_php_runtime/tree/master"
+            },
+            "time": "2024-08-19T17:12:36+00:00"
+        },
+        {
+            "name": "smx/ksdump-php",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/smx-smx/ksdump-php.git",
+                "reference": "b64022fca41c681a391f10d7d102787dea0f323b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/smx-smx/ksdump-php/zipball/b64022fca41c681a391f10d7d102787dea0f323b",
+                "reference": "b64022fca41c681a391f10d7d102787dea0f323b",
+                "shasum": ""
+            },
+            "require": {
+                "kaitai-io/kaitai_struct_php_runtime": "dev-master#e21bc2a3824f1a2b37588c191596b67cb4ba03ba"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Smx\\KaitaiPdb\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "Stefano Moioli",
+                    "email": "smxdev4@gmail.com"
+                }
+            ],
+            "support": {
+                "source": "https://github.com/smx-smx/ksdump-php/tree/main",
+                "issues": "https://github.com/smx-smx/ksdump-php/issues"
+            },
+            "time": "2025-01-06T19:52:05+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "smx/ksdump-php": 20,
+        "kaitai-io/kaitai_struct_php_runtime": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
