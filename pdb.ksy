@@ -3967,6 +3967,17 @@ types:
             c13_lines::subsection_type::inlinee_lines: c13_subsection_inlinee_lines
             c13_lines::subsection_type::frame_data: c13_subsection_frame_data
             _: c13_subsection_ignore
+      - id: invoke_align_marker
+        if: align_marker >= 0
+        size: 0
+      - size: padding_size
+    instances:
+      align_marker:
+        value: _io.pos
+      zzz_align_size:
+        type: align(align_marker.as<u4>, 4)
+      padding_size:
+        value: zzz_align_size.padding_size
   c11_srcfile:
     doc-ref: SrcFile
     seq:
