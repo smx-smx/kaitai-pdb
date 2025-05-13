@@ -4940,7 +4940,7 @@ types:
       end_of_hdr:
         value: _io.pos
   debug_data:
-    doc-ref: 'DBGTYPE'
+    doc-ref: 'DbgDataHdr'
     seq:
       - id: fpo_stream
         if: have_fpo_stream
@@ -5242,6 +5242,7 @@ types:
         size: header_new.ec_substream_size
         type: name_table
       - id: debug_data
+        doc-ref: 'dbghdr'
         if: is_new_hdr and header_new.debug_header_size > 0
         size: header_new.debug_header_size
         type: debug_data
