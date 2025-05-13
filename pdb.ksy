@@ -2365,6 +2365,17 @@ types:
         type: pdb_string(string_prefixed)
         doc: 'Length-prefixed name'
         doc-ref: 'name'
+  sym_search:
+    doc-ref: 'SEARCHSYM'
+    seq:
+      - id: start_symbol
+        type: dbi_symbol_ref(_parent.module_index.as<u4>)
+        doc: 'offset of the procedure'
+        doc-ref: 'startsym'
+      - id: segment
+        type: u2
+        doc: 'segment of symbol'
+        doc-ref: 'seg'
   sym_udt:
     doc-ref: 'UDTSYM'
     params:
@@ -3558,6 +3569,7 @@ types:
             dbi::symbol_type::s_compile3: sym_compile3
             dbi::symbol_type::s_constant: sym_constant(false)
             dbi::symbol_type::s_constant_st: sym_constant(true)
+            dbi::symbol_type::s_ssearch: sym_search
             dbi::symbol_type::s_udt: sym_udt(false)
             dbi::symbol_type::s_coboludt: sym_udt(false)
             dbi::symbol_type::s_udt_st: sym_udt(true)
