@@ -1,6 +1,7 @@
 ﻿using Kaitai;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -108,8 +109,8 @@ namespace pdbtool
                 foreach(var s in syms)
                 {
                     VisitSymbol(s,
-                        iSym, syms.Count,
-                        iMod, mods.Count);
+                        iMod, mods.Count,
+                        iSym, syms.Count);
                     ++iSym;
                 }
                 ++iMod;
@@ -171,9 +172,13 @@ namespace pdbtool
 
         public void Run()
         {
+            var sw = new Stopwatch();
+            sw.Start();
             Console.WriteLine("... loading types ...");
             VisitTypes();
             VisitSymbols();
+            sw.Stop();
+            Console.WriteLine($"Completed in {sw.Elapsed.TotalSeconds} seconds");
         }
     }
 }
