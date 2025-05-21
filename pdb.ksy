@@ -1472,8 +1472,14 @@ types:
         doc: 'align this record'
         doc-ref: 'usFill'
       - id: name
+        # only S_PROCREF and S_LPROCREF have the trailing name
+        if: not _io.eof
         type: pdb_string(string_prefixed)
         doc-ref: 'name'
+    instances:
+      symbol:
+        if: module_index > 0
+        type: dbi_symbol_ref2((module_index-1).as<u4>, symbol_offset)
   sym_skip:
     seq:
       - size-eos: true
@@ -3519,6 +3525,26 @@ types:
       - id: parent_section
         type: u2
         doc-ref: 'sectParent'
+  dbi_symbol_ref2:
+    params:
+      - id: module_index
+        type: u4
+      - id: offset
+        type: u4
+    instances:
+      zzz_module_io:
+        type: get_module_io(module_index)
+      module_io:
+        value: zzz_module_io.value
+      is_offset_eof:
+        value: offset >= module_io.size
+      symbol:
+        io: module_io
+        # make sure offset is valid
+        if: is_offset_eof == false and offset > sizeof<u4>
+        # go before length field (subtract 4 for the module signature)
+        pos: offset - sizeof<u4>
+        type: dbi_symbol(module_index.as<s4>)
   dbi_symbol_ref:
     params:
       - id: module_index
@@ -3643,6 +3669,7 @@ types:
             dbi::symbol_type::s_procref: sym_reference(false)
             dbi::symbol_type::s_dataref: sym_reference(false)
             dbi::symbol_type::s_lprocref: sym_reference(false)
+            dbi::symbol_type::s_annotationref: sym_reference(false)
             dbi::symbol_type::s_gdata_hlsl: sym_data_hlsl
             dbi::symbol_type::s_ldata_hlsl: sym_data_hlsl
             dbi::symbol_type::s_gdata_hlsl32: sym_data_hlsl32
